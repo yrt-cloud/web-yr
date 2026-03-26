@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -55,7 +55,6 @@
     <header class="bg-primary text-white p-4 shadow-lg mb-6 no-print sticky top-0 z-40">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <!-- Logo Box -->
                 <div class="bg-white p-1 rounded-lg shadow-inner overflow-hidden w-12 h-12 flex items-center justify-center">
                     <img src="https://api.pax-canvas.com/files/uploaded:pngwing.com%20(1).png" 
                          alt="Logo Kopswa" 
@@ -104,12 +103,14 @@
         
         <!-- Panel Statistik -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 no-print">
+            <!-- Grafik Barang Terlaris (Dulu Pie Chart) -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Metode Pembayaran (Hari Ini)</h3>
-                <div class="relative h-40">
-                    <canvas id="paymentChart"></canvas>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">5 Barang Terlaris (Hari Ini)</h3>
+                <div class="relative h-44">
+                    <canvas id="topProductsChart"></canvas>
                 </div>
             </div>
+            <!-- Grafik Tren Pendapatan -->
             <div class="md:col-span-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Tren Pendapatan (7 Hari Terakhir)</h3>
                 <div class="relative h-40">
@@ -167,18 +168,13 @@
                 <div id="category-tabs" class="flex flex-wrap gap-2 mb-2 p-1 bg-gray-200/50 rounded-xl inline-flex"></div>
                 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <!-- HEADER TABEL DENGAN FITUR SEARCH -->
                     <div class="grid grid-cols-12 gap-2 bg-primary p-3 border-b text-[10px] font-bold text-white uppercase tracking-wider items-center">
                         <div class="col-span-5 md:col-span-6 flex items-center gap-3">
                             <span class="whitespace-nowrap">Nama Barang (A-Z)</span>
-                            <!-- SEARCH INPUT -->
                             <div class="relative flex-1">
                                 <input type="text" id="searchInput" oninput="handleSearch()" 
                                     placeholder="Cari nama barang..." 
                                     class="w-full bg-[#08323a] text-white border-none rounded px-2 py-1 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 absolute right-2 top-1.5 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
                             </div>
                         </div>
                         <div class="col-span-3 md:col-span-3 text-center">Qty Tunai</div>
@@ -236,9 +232,7 @@
                         <thead>
                             <tr class="border-b text-[10px] uppercase font-bold text-primary opacity-60">
                                 <th class="py-3 px-2">Tanggal</th>
-                                <th class="py-3 px-2 text-right">Tunai</th>
-                                <th class="py-3 px-2 text-right">QRIS</th>
-                                <th class="py-3 px-2 text-right">Total</th>
+                                <th class="py-3 px-2 text-right">Total Pendapatan</th>
                                 <th class="py-3 px-2 text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -284,7 +278,7 @@
     </div>
 
     <script>
-        // Data Inisialisasi
+        // Data Master
         let items = JSON.parse(localStorage.getItem('kantin_master_items')) || [
             { id: '1', nama: 'Sierra Galon', harga: 15500, kategori: 'Minuman' },
             { id: '2', nama: 'Aqua botol 1500 ml', harga: 5000, kategori: 'Minuman' },
@@ -299,7 +293,7 @@
         let searchQuery = "";
         let savedReports = JSON.parse(localStorage.getItem('kantin_reports') || '[]');
         let autoSaveTimeout = null;
-        let paymentChart = null;
+        let topProductsChart = null;
         let trendChart = null;
 
         function formatRupiah(num) {
@@ -314,27 +308,35 @@
         }
 
         function initCharts() {
-            const payCtx = document.getElementById('paymentChart').getContext('2d');
-            paymentChart = new Chart(payCtx, {
-                type: 'doughnut',
+            // Inisialisasi Grafik Barang Terlaris (Bar Horizontal)
+            const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            topProductsChart = new Chart(topCtx, {
+                type: 'bar',
                 data: {
-                    labels: ['Tunai', 'QRIS'],
+                    labels: [],
                     datasets: [{
-                        data: [0, 0],
-                        backgroundColor: ['#0c4651', '#e6ff2a'],
-                        borderWidth: 0
+                        label: 'Qty Terjual',
+                        data: [],
+                        backgroundColor: '#0c4651',
+                        borderRadius: 4,
+                        barThickness: 15
                     }]
                 },
                 options: {
+                    indexAxis: 'y', // Menjadikan bar horizontal
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                        legend: { display: false }
                     },
-                    cutout: '70%'
+                    scales: {
+                        x: { beginAtZero: true, ticks: { font: { size: 9 }, stepSize: 1 } },
+                        y: { ticks: { font: { size: 9 } } }
+                    }
                 }
             });
 
+            // Inisialisasi Grafik Tren Pendapatan
             const trendCtx = document.getElementById('trendChart').getContext('2d');
             trendChart = new Chart(trendCtx, {
                 type: 'line',
@@ -369,54 +371,28 @@
         }
 
         function updateCharts() {
-            if (!paymentChart || !trendChart) return;
-            let totalCash = 0;
-            let totalQris = 0;
-            Object.values(cart).forEach(item => {
-                totalCash += item.cash * item.harga;
-                totalQris += item.qris * item.harga;
-            });
-            paymentChart.data.datasets[0].data = [totalCash, totalQris];
-            paymentChart.update();
+            if (!topProductsChart || !trendChart) return;
 
+            // Update Grafik Barang Terlaris
+            // Hitung total qty per item dari keranjang saat ini
+            const productSales = Object.values(cart)
+                .map(item => ({
+                    nama: item.nama,
+                    qty: (parseInt(item.cash) || 0) + (parseInt(item.qris) || 0)
+                }))
+                .filter(p => p.qty > 0)
+                .sort((a, b) => b.qty - a.qty)
+                .slice(0, 5); // Ambil 5 teratas
+
+            topProductsChart.data.labels = productSales.map(p => p.nama);
+            topProductsChart.data.datasets[0].data = productSales.map(p => p.qty);
+            topProductsChart.update();
+
+            // Update Grafik Tren (7 Hari Terakhir)
             const sortedReports = [...savedReports].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
             trendChart.data.labels = sortedReports.map(r => r.date.split('-').slice(1).reverse().join('/'));
             trendChart.data.datasets[0].data = sortedReports.map(r => r.total);
             trendChart.update();
-        }
-
-        function exportData() {
-            const dataToBackup = { master_items: items, reports: savedReports, backup_date: new Date().toLocaleString('id-ID') };
-            const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup_toko_kopswa_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        function importData(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const imported = JSON.parse(e.target.result);
-                    if (confirm('Data yang ada saat ini akan ditimpa dengan data dari file backup. Lanjutkan?')) {
-                        items = imported.master_items || items;
-                        savedReports = imported.reports || savedReports;
-                        localStorage.setItem('kantin_master_items', JSON.stringify(items));
-                        localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-                        syncWithSavedData();
-                        alert('Data berhasil dimuat ulang!');
-                    }
-                } catch (err) { alert('Gagal membaca file!'); }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; 
         }
 
         function syncWithSavedData() {
@@ -426,15 +402,6 @@
             cart = reportForDate ? JSON.parse(JSON.stringify(reportForDate.details)) : {};
             refreshDisplay();
             updateCharts();
-        }
-
-        function updateDateDisplay() {
-            const dateVal = document.getElementById('headerDate').value;
-            if(!dateVal) return;
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formatted = new Date(dateVal).toLocaleDateString('id-ID', options);
-            document.getElementById('display-date-label').innerText = formatted;
-            document.getElementById('print-date-label').innerText = formatted;
         }
 
         function refreshDisplay() {
@@ -451,13 +418,17 @@
             const allCats = ["Semua", ...categories];
             container.innerHTML = allCats.map(cat => `
                 <button onclick="setActiveCategory('${cat}')" 
-                    class="px-4 py-1.5 rounded-lg transition text-xs font-bold ${activeCategory === cat ? 'bg-primary text-secondary shadow-sm' : 'text-gray-500 hover:bg-gray-200'}">
+                    class="px-4 py-1.5 rounded-lg transition text-xs font-bold ${activeCategory === cat ? 'bg-primary text-secondary' : 'text-gray-500 hover:bg-gray-200'}">
                     ${cat}
                 </button>
             `).join('');
         }
 
-        // FUNGSI HANDLE SEARCH
+        function setActiveCategory(cat) {
+            activeCategory = cat;
+            refreshDisplay();
+        }
+
         function handleSearch() {
             searchQuery = document.getElementById('searchInput').value.toLowerCase();
             renderItems([...new Set(items.map(i => i.kategori))].sort());
@@ -471,13 +442,8 @@
             let hasAnyResult = false;
 
             catsToDisplay.forEach(cat => {
-                // Filter kategori dulu, kemudian filter berdasarkan search query
                 let filtered = items.filter(i => i.kategori === cat);
-                
-                if (searchQuery.trim() !== "") {
-                    filtered = filtered.filter(i => i.nama.toLowerCase().includes(searchQuery));
-                }
-
+                if (searchQuery.trim() !== "") filtered = filtered.filter(i => i.nama.toLowerCase().includes(searchQuery));
                 if (filtered.length === 0) return;
                 
                 hasAnyResult = true;
@@ -512,9 +478,7 @@
                 });
             });
 
-            if (!hasAnyResult) {
-                html = `<div class="p-10 text-center text-gray-400 italic text-xs">Barang tidak ditemukan...</div>`;
-            }
+            if (!hasAnyResult) html = `<div class="p-10 text-center text-gray-400 italic text-xs">Barang tidak ditemukan...</div>`;
             container.innerHTML = html;
         }
 
@@ -523,13 +487,9 @@
             const base = items.find(i => i.id === id);
             if (!cart[id]) cart[id] = { id: base.id, nama: base.nama, harga: base.harga, cash: 0, qris: 0 };
             cart[id][type] = qty;
-            const subLabel = document.getElementById(`sub-${type}-${id}`);
-            if (subLabel) {
-                const total = qty * base.harga;
-                subLabel.innerText = formatRupiah(total);
-                total > 0 ? subLabel.classList.remove('hidden') : subLabel.classList.add('hidden');
-            }
+            
             if (cart[id].cash === 0 && cart[id].qris === 0) delete cart[id];
+            
             renderCart();
             updateCharts();
             if(autoSaveTimeout) clearTimeout(autoSaveTimeout);
@@ -540,19 +500,23 @@
             const container = document.getElementById('cart-items');
             const printBody = document.getElementById('print-table-body');
             let tCash = 0, tQris = 0;
+            
             if (Object.keys(cart).length === 0) {
-                container.innerHTML = `<div class="py-6 text-center opacity-20 text-[10px] font-bold uppercase">Kosong</div>`;
-                printBody.innerHTML = '<tr><td colspan="5" class="border p-4 text-center text-slate-400 italic">Tidak ada transaksi</td></tr>';
+                container.innerHTML = `<div class="py-6 text-center opacity-20 text-[10px] font-bold uppercase">Belum ada transaksi</div>`;
+                printBody.innerHTML = '<tr><td colspan="5" class="border p-4 text-center italic text-gray-400">Tidak ada data</td></tr>';
                 updateTotals(0, 0);
                 return;
             }
+
             const sortedIds = Object.keys(cart).sort((a,b) => cart[a].nama.localeCompare(cart[b].nama));
             let html = '', phtml = '';
+            
             sortedIds.forEach(id => {
                 const item = cart[id];
                 const sub = (item.cash + item.qris) * item.harga;
                 tCash += item.cash * item.harga;
                 tQris += item.qris * item.harga;
+                
                 html += `
                     <div class="bg-primary/5 p-2 rounded-lg border border-primary/10 flex justify-between items-center text-[11px]">
                         <div class="flex-1 pr-2">
@@ -561,8 +525,10 @@
                         </div>
                         <p class="font-black text-primary">${formatRupiah(sub)}</p>
                     </div>`;
+                    
                 phtml += `<tr class="font-bold"><td class="border border-black p-2">${item.nama.toUpperCase()}</td><td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td><td class="border border-black p-2 text-center">${item.cash}</td><td class="border border-black p-2 text-center">${item.qris}</td><td class="border border-black p-2 text-right">${formatRupiah(sub)}</td></tr>`;
             });
+            
             container.innerHTML = html;
             printBody.innerHTML = phtml;
             updateTotals(tCash, tQris);
@@ -578,116 +544,134 @@
             document.getElementById('print-grand-total').innerText = formatRupiah(grand);
         }
 
-        function setActiveCategory(cat) { 
-            activeCategory = cat; 
-            // Reset search saat pindah tab jika diinginkan, atau biarkan tetap tersaring
-            refreshDisplay(); 
+        function saveDailyReport(manual) {
+            const date = document.getElementById('headerDate').value;
+            let total = 0;
+            Object.values(cart).forEach(i => total += (i.cash + i.qris) * i.harga);
+            
+            const idx = savedReports.findIndex(r => r.date === date);
+            const data = { 
+                id: idx >= 0 ? savedReports[idx].id : Date.now(), 
+                date, 
+                total, 
+                details: JSON.parse(JSON.stringify(cart)) 
+            };
+            
+            if (idx >= 0) savedReports[idx] = data; else savedReports.push(data);
+            localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
+            
+            if (manual) alert('Data laporan berhasil disimpan!');
+            const status = document.getElementById('auto-save-status');
+            status.style.opacity = '1'; setTimeout(() => status.style.opacity = '0', 2000);
+            updateCharts();
         }
-        
-        function openModal(id = null) {
+
+        function updateDateDisplay() {
+            const dateVal = document.getElementById('headerDate').value;
+            if(!dateVal) return;
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const formatted = new Date(dateVal).toLocaleDateString('id-ID', options);
+            document.getElementById('display-date-label').innerText = formatted;
+            document.getElementById('print-date-label').innerText = formatted;
+        }
+
+        function updateCategoryList(cats) {
+            const list = document.getElementById('categoryList');
+            list.innerHTML = cats.map(c => `<option value="${c}">`).join('');
+        }
+
+        function openModal() {
+            document.getElementById('modalBarang').classList.add('modal-active');
+            document.getElementById('modalTitle').innerText = "Tambah Barang Baru";
+        }
+
+        function closeModal() {
+            document.getElementById('modalBarang').classList.remove('modal-active');
             document.getElementById('formBarang').reset();
-            document.getElementById('editId').value = "";
-            document.getElementById('modalTitle').innerText = "Tambah Data Barang";
-            if(id) {
-                const item = items.find(i => i.id === id);
-                document.getElementById('editId').value = item.id;
-                document.getElementById('inputNama').value = item.nama;
-                document.getElementById('inputHarga').value = item.harga;
-                document.getElementById('inputKategori').value = item.kategori;
-                document.getElementById('modalTitle').innerText = "Update Data Barang";
-            }
+            document.getElementById('editId').value = '';
+        }
+
+        function editItem(id) {
+            const item = items.find(i => i.id === id);
+            document.getElementById('editId').value = item.id;
+            document.getElementById('inputNama').value = item.nama;
+            document.getElementById('inputHarga').value = item.harga;
+            document.getElementById('inputKategori').value = item.kategori;
+            document.getElementById('modalTitle').innerText = "Edit Data Barang";
             document.getElementById('modalBarang').classList.add('modal-active');
         }
-        function closeModal() { document.getElementById('modalBarang').classList.remove('modal-active'); }
 
         document.getElementById('formBarang').onsubmit = function(e) {
             e.preventDefault();
-            const id = document.getElementById('editId').value;
-            const nama = document.getElementById('inputNama').value;
-            const harga = parseInt(document.getElementById('inputHarga').value);
-            const kategori = document.getElementById('inputKategori').value || "Lainnya";
-            if(id) {
-                const idx = items.findIndex(i => i.id === id);
-                items[idx] = { id, nama, harga, kategori };
-            } else {
-                items.push({ id: Date.now().toString(), nama, harga, kategori });
-            }
+            const id = document.getElementById('editId').value || Date.now().toString();
+            const newItem = {
+                id,
+                nama: document.getElementById('inputNama').value,
+                harga: parseInt(document.getElementById('inputHarga').value),
+                kategori: document.getElementById('inputKategori').value
+            };
+            const idx = items.findIndex(i => i.id === id);
+            if(idx >= 0) items[idx] = newItem; else items.push(newItem);
             localStorage.setItem('kantin_master_items', JSON.stringify(items));
             closeModal(); refreshDisplay();
         };
 
-        function updateCategoryList(cats) { document.getElementById('categoryList').innerHTML = cats.map(c => `<option value="${c}">`).join(''); }
-        function editItem(id) { openModal(id); }
-        function resetApp() { if(confirm('Hapus semua input saat ini?')) { cart = {}; renderCart(); renderItems([...new Set(items.map(i => i.kategori))]); saveDailyReport(false); } }
-
-        function saveDailyReport(isManual = false) {
-            const date = document.getElementById('headerDate').value;
-            if(!date) return;
-            let tCash = 0, tQris = 0;
-            for(const id in cart) { tCash += cart[id].cash * cart[id].harga; tQris += cart[id].qris * cart[id].harga; }
-            const report = { id: Date.now(), date, totalCash: tCash, totalQris: tQris, total: tCash + tQris, details: JSON.parse(JSON.stringify(cart)) };
-            const existingIdx = savedReports.findIndex(r => r.date === date);
-            if(existingIdx >= 0) {
-                if(isManual) { if(confirm(`Update laporan tanggal ${date}?`)) { savedReports[existingIdx] = report; } else { return; } } 
-                else { savedReports[existingIdx] = report; }
-            } else { savedReports.push(report); }
-            localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-            updateCharts();
-            if(isManual) { alert('Tersimpan!'); } else {
-                const badge = document.getElementById('auto-save-status');
-                badge.style.opacity = "1"; setTimeout(() => { badge.style.opacity = "0"; }, 2000);
+        function resetApp() {
+            if(confirm('Hapus semua transaksi hari ini? Data yang sudah disimpan di riwayat tidak akan hilang.')) {
+                cart = {}; refreshDisplay(); saveDailyReport(false);
             }
         }
 
         function showHistory() {
+            const modal = document.getElementById('modalHistory');
             const body = document.getElementById('history-table-body');
-            const sorted = [...savedReports].sort((a,b) => new Date(b.date) - new Date(a.date));
-            body.innerHTML = sorted.length > 0 ? sorted.map(r => `
-                <tr class="hover:bg-primary/5 transition">
-                    <td class="py-4 px-2 font-bold text-primary">${r.date}</td>
-                    <td class="py-4 px-2 text-right text-emerald-600 font-medium">${formatRupiah(r.totalCash || 0)}</td>
-                    <td class="py-4 px-2 text-right text-primary opacity-70 font-medium">${formatRupiah(r.totalQris || 0)}</td>
-                    <td class="py-4 px-2 text-right font-black text-primary">${formatRupiah(r.total)}</td>
-                    <td class="py-4 px-2 text-center whitespace-nowrap">
-                        <div class="flex gap-2 justify-center">
-                            <button onclick="editHistoryReport('${r.id}')" class="px-2 py-1 bg-primary text-white rounded text-[10px] font-bold">EDIT</button>
-                            <button onclick="printHistory('${r.date}')" class="px-2 py-1 bg-secondary text-primary rounded text-[10px] font-bold">CETAK</button>
-                            <button onclick="deleteHistoryReport('${r.id}')" class="px-2 py-1 bg-white text-rose-600 rounded text-[10px] font-bold border">HAPUS</button>
-                        </div>
-                    </td>
-                </tr>`).join('') : '<tr><td colspan="5" class="py-10 text-center opacity-30 italic">Belum ada laporan</td></tr>';
-            document.getElementById('modalHistory').classList.add('modal-active');
+            body.innerHTML = '';
+            
+            savedReports.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
+                body.innerHTML += `
+                    <tr>
+                        <td class="p-3 font-bold text-primary">${r.date}</td>
+                        <td class="p-3 text-right font-black">${formatRupiah(r.total)}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="loadHistory('${r.date}')" class="text-xs bg-primary text-secondary px-3 py-1 rounded-full font-bold">Buka</button>
+                        </td>
+                    </tr>`;
+            });
+            modal.classList.add('modal-active');
         }
 
-        function deleteHistoryReport(id) {
-            if(confirm('Hapus laporan?')) {
-                savedReports = savedReports.filter(r => r.id.toString() !== id.toString());
-                localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-                showHistory(); updateCharts();
-            }
-        }
-
-        function editHistoryReport(id) {
-            const report = savedReports.find(r => r.id.toString() === id.toString());
-            if(!report) return;
-            document.getElementById('headerDate').value = report.date;
+        function loadHistory(date) {
+            document.getElementById('headerDate').value = date;
             syncWithSavedData();
             document.getElementById('modalHistory').classList.remove('modal-active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        function printHistory(date) {
-            const r = savedReports.find(x => x.date === date);
-            if(!r) return;
-            const originalCart = JSON.parse(JSON.stringify(cart));
-            const originalDate = document.getElementById('headerDate').value;
-            cart = r.details; document.getElementById('headerDate').value = date;
-            updateDateDisplay(); renderCart(); 
-            setTimeout(() => { 
-                window.print(); 
-                cart = originalCart; document.getElementById('headerDate').value = originalDate;
-                updateDateDisplay(); refreshDisplay(); 
-            }, 500);
+        function exportData() {
+            const data = { master: items, reports: savedReports };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `backup_kopswa_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function importData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.master) items = data.master;
+                    if (data.reports) savedReports = data.reports;
+                    localStorage.setItem('kantin_master_items', JSON.stringify(items));
+                    localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
+                    syncWithSavedData();
+                    alert('Data berhasil dimuat!');
+                } catch (err) { alert('Format file tidak valid!'); }
+            };
+            reader.readAsText(file);
         }
 
         window.onload = init;
