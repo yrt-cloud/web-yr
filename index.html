@@ -23,6 +23,10 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white; padding: 0; margin: 0; }
+            
+            /* CSS Fix: Ensure Grand Total only appears at the very end */
+            tfoot { display: table-row-group; }
+            tfoot tr { page-break-inside: avoid; }
         }
         .print-only { display: none; }
         .modal-active { display: flex !important; }
@@ -103,14 +107,12 @@
         
         <!-- Panel Statistik -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 no-print">
-            <!-- Grafik Barang Terlaris (Dulu Pie Chart) -->
             <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">5 Barang Terlaris (Hari Ini)</h3>
                 <div class="relative h-44">
                     <canvas id="topProductsChart"></canvas>
                 </div>
             </div>
-            <!-- Grafik Tren Pendapatan -->
             <div class="md:col-span-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Tren Pendapatan (7 Hari Terakhir)</h3>
                 <div class="relative h-40">
@@ -220,6 +222,7 @@
         </div>
     </div>
 
+    <!-- Modal Riwayat -->
     <div id="modalHistory" class="fixed inset-0 bg-primary/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col border border-primary/20">
             <div class="bg-primary p-4 text-white flex justify-between items-center">
@@ -308,7 +311,6 @@
         }
 
         function initCharts() {
-            // Inisialisasi Grafik Barang Terlaris (Bar Horizontal)
             const topCtx = document.getElementById('topProductsChart').getContext('2d');
             topProductsChart = new Chart(topCtx, {
                 type: 'bar',
@@ -323,12 +325,10 @@
                     }]
                 },
                 options: {
-                    indexAxis: 'y', // Menjadikan bar horizontal
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         x: { beginAtZero: true, ticks: { font: { size: 9 }, stepSize: 1 } },
                         y: { ticks: { font: { size: 9 } } }
@@ -336,7 +336,6 @@
                 }
             });
 
-            // Inisialisasi Grafik Tren Pendapatan
             const trendCtx = document.getElementById('trendChart').getContext('2d');
             trendChart = new Chart(trendCtx, {
                 type: 'line',
@@ -372,9 +371,6 @@
 
         function updateCharts() {
             if (!topProductsChart || !trendChart) return;
-
-            // Update Grafik Barang Terlaris
-            // Hitung total qty per item dari keranjang saat ini
             const productSales = Object.values(cart)
                 .map(item => ({
                     nama: item.nama,
@@ -382,13 +378,12 @@
                 }))
                 .filter(p => p.qty > 0)
                 .sort((a, b) => b.qty - a.qty)
-                .slice(0, 5); // Ambil 5 teratas
+                .slice(0, 5);
 
             topProductsChart.data.labels = productSales.map(p => p.nama);
             topProductsChart.data.datasets[0].data = productSales.map(p => p.qty);
             topProductsChart.update();
 
-            // Update Grafik Tren (7 Hari Terakhir)
             const sortedReports = [...savedReports].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
             trendChart.data.labels = sortedReports.map(r => r.date.split('-').slice(1).reverse().join('/'));
             trendChart.data.datasets[0].data = sortedReports.map(r => r.total);
@@ -424,10 +419,7 @@
             `).join('');
         }
 
-        function setActiveCategory(cat) {
-            activeCategory = cat;
-            refreshDisplay();
-        }
+        function setActiveCategory(cat) { activeCategory = cat; refreshDisplay(); }
 
         function handleSearch() {
             searchQuery = document.getElementById('searchInput').value.toLowerCase();
@@ -451,8 +443,8 @@
                 
                 filtered.forEach(item => {
                     const cartItem = cart[item.id] || { cash: 0, qris: 0 };
-                    const lineCash = cartItem.cash * item.harga;
-                    const lineQris = cartItem.qris * item.harga;
+                    const lineCash = (cartItem.cash || 0) * item.harga;
+                    const lineQris = (cartItem.qris || 0) * item.harga;
                     html += `
                         <div class="grid grid-cols-12 gap-2 p-3 items-start hover:bg-slate-50 group transition">
                             <div class="col-span-5 md:col-span-6 overflow-hidden">
@@ -460,12 +452,12 @@
                                 <p class="text-[10px] text-gray-400">${formatRupiah(item.harga)}</p>
                             </div>
                             <div class="col-span-3 md:col-span-3">
-                                <input type="number" min="0" value="${cartItem.cash}" oninput="updateCartValue('${item.id}', this.value, 'cash')" 
+                                <input type="number" min="0" value="${cartItem.cash || 0}" oninput="updateCartValue('${item.id}', this.value, 'cash')" 
                                     class="w-full text-center border rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-primary outline-none">
                                 <p id="sub-cash-${item.id}" class="text-[9px] text-center font-bold text-primary mt-1 ${lineCash > 0 ? '' : 'hidden'}">${formatRupiah(lineCash)}</p>
                             </div>
                             <div class="col-span-3 md:col-span-2">
-                                <input type="number" min="0" value="${cartItem.qris}" oninput="updateCartValue('${item.id}', this.value, 'qris')" 
+                                <input type="number" min="0" value="${cartItem.qris || 0}" oninput="updateCartValue('${item.id}', this.value, 'qris')" 
                                     class="w-full text-center border rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-primary outline-none">
                                 <p id="sub-qris-${item.id}" class="text-[9px] text-center font-bold text-primary/70 mt-1 ${lineQris > 0 ? '' : 'hidden'}">${formatRupiah(lineQris)}</p>
                             </div>
@@ -477,7 +469,6 @@
                         </div>`;
                 });
             });
-
             if (!hasAnyResult) html = `<div class="p-10 text-center text-gray-400 italic text-xs">Barang tidak ditemukan...</div>`;
             container.innerHTML = html;
         }
@@ -487,9 +478,7 @@
             const base = items.find(i => i.id === id);
             if (!cart[id]) cart[id] = { id: base.id, nama: base.nama, harga: base.harga, cash: 0, qris: 0 };
             cart[id][type] = qty;
-            
             if (cart[id].cash === 0 && cart[id].qris === 0) delete cart[id];
-            
             renderCart();
             updateCharts();
             if(autoSaveTimeout) clearTimeout(autoSaveTimeout);
@@ -513,20 +502,18 @@
             
             sortedIds.forEach(id => {
                 const item = cart[id];
-                const sub = (item.cash + item.qris) * item.harga;
-                tCash += item.cash * item.harga;
-                tQris += item.qris * item.harga;
+                const sub = ((item.cash || 0) + (item.qris || 0)) * item.harga;
+                tCash += (item.cash || 0) * item.harga;
+                tQris += (item.qris || 0) * item.harga;
                 
-                html += `
-                    <div class="bg-primary/5 p-2 rounded-lg border border-primary/10 flex justify-between items-center text-[11px]">
+                html += `<div class="bg-primary/5 p-2 rounded-lg border border-primary/10 flex justify-between items-center text-[11px]">
                         <div class="flex-1 pr-2">
                             <p class="font-bold text-primary">${item.nama}</p>
-                            <p class="text-[9px] text-gray-500 font-bold">${item.cash} Tunai | ${item.qris} QRIS</p>
+                            <p class="text-[9px] text-gray-500 font-bold">${item.cash || 0} Tunai | ${item.qris || 0} QRIS</p>
                         </div>
                         <p class="font-black text-primary">${formatRupiah(sub)}</p>
                     </div>`;
-                    
-                phtml += `<tr class="font-bold"><td class="border border-black p-2">${item.nama.toUpperCase()}</td><td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td><td class="border border-black p-2 text-center">${item.cash}</td><td class="border border-black p-2 text-center">${item.qris}</td><td class="border border-black p-2 text-right">${formatRupiah(sub)}</td></tr>`;
+                phtml += `<tr class="font-bold"><td class="border border-black p-2">${item.nama.toUpperCase()}</td><td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td><td class="border border-black p-2 text-center">${item.cash || 0}</td><td class="border border-black p-2 text-center">${item.qris || 0}</td><td class="border border-black p-2 text-right">${formatRupiah(sub)}</td></tr>`;
             });
             
             container.innerHTML = html;
@@ -547,19 +534,11 @@
         function saveDailyReport(manual) {
             const date = document.getElementById('headerDate').value;
             let total = 0;
-            Object.values(cart).forEach(i => total += (i.cash + i.qris) * i.harga);
-            
+            Object.values(cart).forEach(i => total += ((i.cash || 0) + (i.qris || 0)) * i.harga);
             const idx = savedReports.findIndex(r => r.date === date);
-            const data = { 
-                id: idx >= 0 ? savedReports[idx].id : Date.now(), 
-                date, 
-                total, 
-                details: JSON.parse(JSON.stringify(cart)) 
-            };
-            
+            const data = { id: idx >= 0 ? savedReports[idx].id : Date.now(), date, total, details: JSON.parse(JSON.stringify(cart)) };
             if (idx >= 0) savedReports[idx] = data; else savedReports.push(data);
             localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-            
             if (manual) alert('Data laporan berhasil disimpan!');
             const status = document.getElementById('auto-save-status');
             status.style.opacity = '1'; setTimeout(() => status.style.opacity = '0', 2000);
@@ -581,70 +560,81 @@
         }
 
         function openModal() {
+            document.getElementById('modalTitle').innerText = "Tambah Data Barang";
+            document.getElementById('formBarang').reset();
+            document.getElementById('editId').value = "";
             document.getElementById('modalBarang').classList.add('modal-active');
-            document.getElementById('modalTitle').innerText = "Tambah Barang Baru";
         }
 
-        function closeModal() {
-            document.getElementById('modalBarang').classList.remove('modal-active');
-            document.getElementById('formBarang').reset();
-            document.getElementById('editId').value = '';
+        function closeModal() { 
+            document.getElementById('modalBarang').classList.remove('modal-active'); 
         }
 
         function editItem(id) {
             const item = items.find(i => i.id === id);
+            if (!item) return;
+            document.getElementById('modalTitle').innerText = "Edit Data Barang";
             document.getElementById('editId').value = item.id;
             document.getElementById('inputNama').value = item.nama;
             document.getElementById('inputHarga').value = item.harga;
             document.getElementById('inputKategori').value = item.kategori;
-            document.getElementById('modalTitle').innerText = "Edit Data Barang";
             document.getElementById('modalBarang').classList.add('modal-active');
+        }
+
+        function showHistory() {
+            const body = document.getElementById('history-table-body');
+            body.innerHTML = '';
+            
+            const sorted = [...savedReports].sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            if(sorted.length === 0) {
+                body.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-gray-400 italic">Belum ada riwayat laporan</td></tr>';
+            } else {
+                sorted.forEach(report => {
+                    body.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4 px-2 font-bold">${new Date(report.date).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</td>
+                            <td class="py-4 px-2 text-right font-black text-primary">${formatRupiah(report.total)}</td>
+                            <td class="py-4 px-2 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <button onclick="loadReport('${report.date}')" class="bg-primary text-secondary px-3 py-1 rounded text-xs font-bold">Buka</button>
+                                    <button onclick="deleteReport(${report.id})" class="bg-rose-500 text-white px-3 py-1 rounded text-xs font-bold">Hapus</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById('modalHistory').classList.add('modal-active');
+        }
+
+        function loadReport(date) {
+            document.getElementById('headerDate').value = date;
+            syncWithSavedData();
+            document.getElementById('modalHistory').classList.remove('modal-active');
+        }
+
+        function deleteReport(id) {
+            if(confirm('Hapus laporan ini secara permanen?')) {
+                savedReports = savedReports.filter(r => r.id !== id);
+                localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
+                showHistory();
+                syncWithSavedData();
+            }
         }
 
         document.getElementById('formBarang').onsubmit = function(e) {
             e.preventDefault();
             const id = document.getElementById('editId').value || Date.now().toString();
-            const newItem = {
-                id,
-                nama: document.getElementById('inputNama').value,
-                harga: parseInt(document.getElementById('inputHarga').value),
-                kategori: document.getElementById('inputKategori').value
-            };
+            const nama = document.getElementById('inputNama').value;
+            const harga = parseInt(document.getElementById('inputHarga').value);
+            const kategori = document.getElementById('inputKategori').value;
             const idx = items.findIndex(i => i.id === id);
-            if(idx >= 0) items[idx] = newItem; else items.push(newItem);
+            if (idx >= 0) items[idx] = { id, nama, harga, kategori }; else items.push({ id, nama, harga, kategori });
             localStorage.setItem('kantin_master_items', JSON.stringify(items));
-            closeModal(); refreshDisplay();
+            closeModal();
+            refreshDisplay();
         };
-
-        function resetApp() {
-            if(confirm('Hapus semua transaksi hari ini? Data yang sudah disimpan di riwayat tidak akan hilang.')) {
-                cart = {}; refreshDisplay(); saveDailyReport(false);
-            }
-        }
-
-        function showHistory() {
-            const modal = document.getElementById('modalHistory');
-            const body = document.getElementById('history-table-body');
-            body.innerHTML = '';
-            
-            savedReports.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(r => {
-                body.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-bold text-primary">${r.date}</td>
-                        <td class="p-3 text-right font-black">${formatRupiah(r.total)}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="loadHistory('${r.date}')" class="text-xs bg-primary text-secondary px-3 py-1 rounded-full font-bold">Buka</button>
-                        </td>
-                    </tr>`;
-            });
-            modal.classList.add('modal-active');
-        }
-
-        function loadHistory(date) {
-            document.getElementById('headerDate').value = date;
-            syncWithSavedData();
-            document.getElementById('modalHistory').classList.remove('modal-active');
-        }
 
         function exportData() {
             const data = { master: items, reports: savedReports };
@@ -656,22 +646,28 @@
             a.click();
         }
 
-        function importData(e) {
-            const file = e.target.files[0];
+        function importData(event) {
+            const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function(e) {
                 try {
-                    const data = JSON.parse(event.target.result);
-                    if (data.master) items = data.master;
-                    if (data.reports) savedReports = data.reports;
-                    localStorage.setItem('kantin_master_items', JSON.stringify(items));
-                    localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-                    syncWithSavedData();
+                    const data = JSON.parse(e.target.result);
+                    if (data.master) { items = data.master; localStorage.setItem('kantin_master_items', JSON.stringify(items)); }
+                    if (data.reports) { savedReports = data.reports; localStorage.setItem('kantin_reports', JSON.stringify(savedReports)); }
                     alert('Data berhasil dimuat!');
-                } catch (err) { alert('Format file tidak valid!'); }
+                    location.reload();
+                } catch(err) { alert('Format file tidak valid!'); }
             };
             reader.readAsText(file);
+        }
+
+        function resetApp() {
+            if(confirm('Hapus semua transaksi hari ini?')) {
+                cart = {};
+                refreshDisplay();
+                saveDailyReport(false);
+            }
         }
 
         window.onload = init;
