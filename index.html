@@ -23,8 +23,6 @@
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             body { background: white; padding: 0; margin: 0; }
-            
-            /* CSS Fix: Ensure Grand Total only appears at the very end */
             tfoot { display: table-row-group; }
             tfoot tr { page-break-inside: avoid; }
         }
@@ -107,15 +105,23 @@
         
         <!-- Panel Statistik -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 no-print">
-            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">5 Barang Terlaris (Hari Ini)</h3>
-                <div class="relative h-44">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-72">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produk Terpopuler</h3>
+                    <div class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+                </div>
+                <div class="relative h-48">
                     <canvas id="topProductsChart"></canvas>
                 </div>
             </div>
-            <div class="md:col-span-2 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 h-64">
-                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Tren Pendapatan (7 Hari Terakhir)</h3>
-                <div class="relative h-40">
+            <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-72">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performa Penjualan (7 Hari)</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="flex items-center gap-1 text-[9px] font-bold text-primary"><span class="w-2 h-2 rounded-full bg-primary"></span> Pendapatan</span>
+                    </div>
+                </div>
+                <div class="relative h-48">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
@@ -126,10 +132,13 @@
             <!-- Panel Ringkasan -->
             <div class="lg:col-span-4 lg:order-last">
                 <div class="space-y-4 sticky-sidebar no-print">
-                    <div class="bg-primary p-5 rounded-2xl shadow-xl text-white">
+                    <div class="bg-primary p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
+                        <!-- Decorative background -->
+                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rounded-full"></div>
+                        
                         <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
                             <h2 class="text-xs font-bold uppercase tracking-widest opacity-80">Ringkasan Pendapatan</h2>
-                            <span id="display-date-label" class="text-[10px] font-bold bg-secondary text-primary px-2 py-1 rounded-full"></span>
+                            <span id="display-date-label" class="text-[10px] font-bold bg-secondary text-primary px-2 py-1 rounded-full shadow-sm"></span>
                         </div>
                         <div class="space-y-3">
                             <div class="flex justify-between items-center">
@@ -138,27 +147,28 @@
                             </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-xs opacity-80">Total QRIS</span>
-                                <span id="subtotal-qris" class="font-bold text-gray-200">Rp 0</span>
+                                <span id="subtotal-qris" class="font-bold text-gray-200 text-secondary/80">Rp 0</span>
                             </div>
-                            <div class="pt-3 border-t border-white/10 flex justify-between items-end">
+                            <div class="pt-4 border-t border-white/10 flex justify-between items-end">
                                 <span class="text-xs font-black uppercase text-secondary">Grand Total</span>
                                 <div class="text-right">
-                                    <span id="grand-total" class="text-3xl font-black block text-secondary">Rp 0</span>
-                                    <span id="auto-save-status" class="text-[9px] text-emerald-400 font-bold uppercase opacity-0 transition-opacity">Tersimpan Otomatis</span>
+                                    <span id="grand-total" class="text-3xl font-black block text-secondary tracking-tighter">Rp 0</span>
+                                    <span id="auto-save-status" class="text-[9px] text-emerald-400 font-bold uppercase opacity-0 transition-opacity">Auto-saved</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Detail Penjualan</h3>
-                            <button onclick="resetApp()" class="text-[10px] text-rose-500 font-bold hover:underline">Hapus Semua</button>
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Detail Penjualan</h3>
+                            <button onclick="resetApp()" class="text-[10px] text-rose-500 font-bold hover:underline">Reset</button>
                         </div>
                         <div id="cart-items" class="scroll-area-cart space-y-2 pr-1"></div>
-                        <div class="grid grid-cols-1 mt-4">
-                            <button onclick="showHistory()" class="w-full text-primary font-bold py-2 rounded-lg hover:bg-slate-50 transition text-xs border border-primary/20">
-                                📑 Lihat & Edit Riwayat Laporan
+                        <div class="grid grid-cols-1 mt-5">
+                            <button onclick="showHistory()" class="w-full text-primary font-bold py-3 rounded-xl hover:bg-slate-50 transition text-xs border border-primary/10 flex items-center justify-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                Riwayat Laporan
                             </button>
                         </div>
                     </div>
@@ -169,21 +179,21 @@
             <div class="lg:col-span-8 space-y-4 no-print">
                 <div id="category-tabs" class="flex flex-wrap gap-2 mb-2 p-1 bg-gray-200/50 rounded-xl inline-flex"></div>
                 
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="grid grid-cols-12 gap-2 bg-primary p-3 border-b text-[10px] font-bold text-white uppercase tracking-wider items-center">
-                        <div class="col-span-5 md:col-span-6 flex items-center gap-3">
-                            <span class="whitespace-nowrap">Nama Barang (A-Z)</span>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="grid grid-cols-12 gap-2 bg-primary p-4 border-b text-[10px] font-black text-white uppercase tracking-widest items-center">
+                        <div class="col-span-5 md:col-span-6 flex items-center gap-4">
+                            <span class="whitespace-nowrap">Barang</span>
                             <div class="relative flex-1">
                                 <input type="text" id="searchInput" oninput="handleSearch()" 
-                                    placeholder="Cari nama barang..." 
-                                    class="w-full bg-[#08323a] text-white border-none rounded px-2 py-1 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-400">
+                                    placeholder="Cari..." 
+                                    class="w-full bg-[#08323a] text-white border-none rounded-lg px-3 py-1.5 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-500">
                             </div>
                         </div>
-                        <div class="col-span-3 md:col-span-3 text-center">Qty Tunai</div>
-                        <div class="col-span-3 md:col-span-2 text-center text-secondary">Qty QRIS</div>
+                        <div class="col-span-3 md:col-span-3 text-center">Tunai</div>
+                        <div class="col-span-3 md:col-span-2 text-center text-secondary">QRIS</div>
                         <div class="hidden md:block md:col-span-1 text-right">Edit</div>
                     </div>
-                    <div id="items-container" class="scroll-area-items divide-y divide-gray-100"></div>
+                    <div id="items-container" class="scroll-area-items divide-y divide-slate-50"></div>
                 </div>
             </div>
 
@@ -191,55 +201,55 @@
     </main>
 
     <!-- Modals -->
-    <div id="modalBarang" class="fixed inset-0 bg-primary/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-            <div class="bg-primary p-4 text-white flex justify-between items-center border-b border-white/10">
-                <h3 id="modalTitle" class="font-bold text-secondary uppercase tracking-tighter">Tambah Data Barang</h3>
-                <button onclick="closeModal()" class="text-2xl leading-none hover:text-secondary">&times;</button>
+    <div id="modalBarang" class="fixed inset-0 bg-primary/80 backdrop-blur-md hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+            <div class="bg-primary p-5 text-white flex justify-between items-center">
+                <h3 id="modalTitle" class="font-bold text-secondary uppercase tracking-widest text-sm">Tambah Data Barang</h3>
+                <button onclick="closeModal()" class="text-2xl leading-none hover:rotate-90 transition transform">&times;</button>
             </div>
-            <form id="formBarang" class="p-6 space-y-4">
+            <form id="formBarang" class="p-8 space-y-5">
                 <input type="hidden" id="editId">
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nama Barang</label>
-                    <input type="text" id="inputNama" required class="block w-full border border-gray-200 rounded-lg p-2.5 outline-none focus:border-primary">
+                    <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Nama Barang</label>
+                    <input type="text" id="inputNama" required class="block w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-primary/20 transition">
                 </div>
-                <div class="grid grid-cols-2 gap-3">
+                <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Harga (Rp)</label>
-                        <input type="number" id="inputHarga" required class="block w-full border border-gray-200 rounded-lg p-2.5 outline-none focus:border-primary">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Harga (Rp)</label>
+                        <input type="number" id="inputHarga" required class="block w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-primary/20 transition">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Kategori</label>
-                        <input list="categoryList" id="inputKategori" required class="block w-full border border-gray-200 rounded-lg p-2.5 outline-none focus:border-primary">
+                        <label class="block text-[10px] font-black text-slate-400 uppercase mb-2">Kategori</label>
+                        <input list="categoryList" id="inputKategori" required class="block w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:ring-2 focus:ring-primary/20 transition">
                         <datalist id="categoryList"></datalist>
                     </div>
                 </div>
-                <div class="flex gap-2 pt-4">
-                    <button type="button" onclick="closeModal()" class="flex-1 py-2 bg-slate-100 text-slate-600 rounded-xl font-bold">Batal</button>
-                    <button type="submit" class="flex-1 py-2 bg-primary text-secondary rounded-xl font-bold">Simpan</button>
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()" class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition">Batal</button>
+                    <button type="submit" class="flex-1 py-3 bg-primary text-secondary rounded-2xl font-black shadow-lg shadow-primary/20 hover:brightness-110 transition">SIMPAN</button>
                 </div>
             </form>
         </div>
     </div>
 
     <!-- Modal Riwayat -->
-    <div id="modalHistory" class="fixed inset-0 bg-primary/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col border border-primary/20">
-            <div class="bg-primary p-4 text-white flex justify-between items-center">
-                <h3 class="font-bold text-secondary uppercase">Riwayat Penjualan Harian</h3>
-                <button onclick="document.getElementById('modalHistory').classList.remove('modal-active')" class="text-2xl leading-none hover:text-secondary">&times;</button>
+    <div id="modalHistory" class="fixed inset-0 bg-primary/80 backdrop-blur-md hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-primary p-5 text-white flex justify-between items-center">
+                <h3 class="font-bold text-secondary uppercase tracking-widest text-sm">Riwayat Penjualan</h3>
+                <button onclick="document.getElementById('modalHistory').classList.remove('modal-active')" class="text-2xl leading-none hover:rotate-90 transition transform">&times;</button>
             </div>
-            <div class="p-6 overflow-y-auto">
-                <div class="overflow-x-auto">
+            <div class="p-8 overflow-y-auto">
+                <div class="overflow-x-auto rounded-2xl border border-slate-100">
                     <table class="w-full text-left min-w-[600px]">
                         <thead>
-                            <tr class="border-b text-[10px] uppercase font-bold text-primary opacity-60">
-                                <th class="py-3 px-2">Tanggal</th>
-                                <th class="py-3 px-2 text-right">Total Pendapatan</th>
-                                <th class="py-3 px-2 text-center">Aksi</th>
+                            <tr class="bg-slate-50 border-b text-[10px] uppercase font-black text-slate-400">
+                                <th class="py-4 px-6">Tanggal</th>
+                                <th class="py-4 px-6 text-right">Total Pendapatan</th>
+                                <th class="py-4 px-6 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="history-table-body" class="text-sm divide-y"></tbody>
+                        <tbody id="history-table-body" class="text-sm divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
@@ -311,41 +321,73 @@
         }
 
         function initCharts() {
+            // Chart 1: Bar Horizontal (Top Products)
             const topCtx = document.getElementById('topProductsChart').getContext('2d');
             topProductsChart = new Chart(topCtx, {
                 type: 'bar',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Qty Terjual',
+                        label: 'Qty',
                         data: [],
-                        backgroundColor: '#0c4651',
-                        borderRadius: 4,
-                        barThickness: 15
+                        backgroundColor: [
+                            '#0c4651', '#155e6d', '#1a7486', '#218ba1', '#28a2bc'
+                        ],
+                        borderRadius: 8,
+                        barThickness: 20
                     }]
                 },
                 options: {
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0c4651',
+                            titleFont: { size: 10, weight: 'bold' },
+                            bodyFont: { size: 10 },
+                            padding: 10,
+                            displayColors: false
+                        }
+                    },
                     scales: {
-                        x: { beginAtZero: true, ticks: { font: { size: 9 }, stepSize: 1 } },
-                        y: { ticks: { font: { size: 9 } } }
+                        x: { 
+                            beginAtZero: true, 
+                            grid: { display: false },
+                            ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } 
+                        },
+                        y: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 10, weight: 'bold' }, color: '#475569' } 
+                        }
                     }
                 }
             });
 
+            // Chart 2: Area Line (Trend)
             const trendCtx = document.getElementById('trendChart').getContext('2d');
+            
+            // Create Gradient
+            const gradient = trendCtx.createLinearGradient(0, 0, 0, 200);
+            gradient.addColorStop(0, 'rgba(12, 70, 81, 0.2)');
+            gradient.addColorStop(1, 'rgba(12, 70, 81, 0)');
+
             trendChart = new Chart(trendCtx, {
                 type: 'line',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Pendapatan Harian',
+                        label: 'Total',
                         data: [],
                         borderColor: '#0c4651',
-                        backgroundColor: 'rgba(12, 70, 81, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#e6ff2a',
+                        pointBorderColor: '#0c4651',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        backgroundColor: gradient,
                         fill: true,
                         tension: 0.4
                     }]
@@ -353,16 +395,36 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: '#0c4651',
+                            padding: 12,
+                            titleFont: { size: 10 },
+                            bodyFont: { size: 11, weight: 'bold' },
+                            callbacks: {
+                                label: function(context) {
+                                    return ' Pendapatan: ' + formatRupiah(context.raw);
+                                }
+                            }
+                        }
+                    },
                     scales: {
                         y: { 
                             beginAtZero: true,
+                            grid: { color: '#f1f5f9' },
                             ticks: { 
-                                font: { size: 9 },
-                                callback: function(value) { return 'Rp ' + value.toLocaleString(); }
+                                font: { size: 9, weight: 'bold' },
+                                color: '#94a3b8',
+                                callback: function(value) { return 'Rp ' + (value/1000) + 'k'; }
                             }
                         },
-                        x: { ticks: { font: { size: 9 } } }
+                        x: { 
+                            grid: { display: false },
+                            ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } 
+                        }
                     }
                 }
             });
@@ -371,6 +433,8 @@
 
         function updateCharts() {
             if (!topProductsChart || !trendChart) return;
+            
+            // Update Top Products
             const productSales = Object.values(cart)
                 .map(item => ({
                     nama: item.nama,
@@ -384,8 +448,15 @@
             topProductsChart.data.datasets[0].data = productSales.map(p => p.qty);
             topProductsChart.update();
 
-            const sortedReports = [...savedReports].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
-            trendChart.data.labels = sortedReports.map(r => r.date.split('-').slice(1).reverse().join('/'));
+            // Update Trend (7 Days)
+            const sortedReports = [...savedReports]
+                .sort((a,b) => new Date(a.date) - new Date(b.date))
+                .slice(-7);
+            
+            trendChart.data.labels = sortedReports.map(r => {
+                const d = new Date(r.date);
+                return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+            });
             trendChart.data.datasets[0].data = sortedReports.map(r => r.total);
             trendChart.update();
         }
@@ -413,7 +484,7 @@
             const allCats = ["Semua", ...categories];
             container.innerHTML = allCats.map(cat => `
                 <button onclick="setActiveCategory('${cat}')" 
-                    class="px-4 py-1.5 rounded-lg transition text-xs font-bold ${activeCategory === cat ? 'bg-primary text-secondary' : 'text-gray-500 hover:bg-gray-200'}">
+                    class="px-5 py-2 rounded-xl transition text-[10px] font-black tracking-widest uppercase ${activeCategory === cat ? 'bg-primary text-secondary shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-200'}">
                     ${cat}
                 </button>
             `).join('');
@@ -439,37 +510,37 @@
                 if (filtered.length === 0) return;
                 
                 hasAnyResult = true;
-                html += `<div class="bg-slate-100 px-4 py-1 text-[9px] font-black text-primary/60 uppercase border-b">${cat}</div>`;
+                html += `<div class="bg-slate-50/50 px-4 py-2 text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">${cat}</div>`;
                 
                 filtered.forEach(item => {
                     const cartItem = cart[item.id] || { cash: 0, qris: 0 };
                     const lineCash = (cartItem.cash || 0) * item.harga;
                     const lineQris = (cartItem.qris || 0) * item.harga;
                     html += `
-                        <div class="grid grid-cols-12 gap-2 p-3 items-start hover:bg-slate-50 group transition">
+                        <div class="grid grid-cols-12 gap-2 p-4 items-center hover:bg-slate-50 group transition">
                             <div class="col-span-5 md:col-span-6 overflow-hidden">
                                 <p class="font-bold text-slate-700 text-sm truncate">${item.nama}</p>
-                                <p class="text-[10px] text-gray-400">${formatRupiah(item.harga)}</p>
+                                <p class="text-[10px] font-medium text-slate-400">${formatRupiah(item.harga)}</p>
                             </div>
                             <div class="col-span-3 md:col-span-3">
                                 <input type="number" min="0" value="${cartItem.cash || 0}" oninput="updateCartValue('${item.id}', this.value, 'cash')" 
-                                    class="w-full text-center border rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-primary outline-none">
-                                <p id="sub-cash-${item.id}" class="text-[9px] text-center font-bold text-primary mt-1 ${lineCash > 0 ? '' : 'hidden'}">${formatRupiah(lineCash)}</p>
+                                    class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-bold focus:ring-2 focus:ring-primary/10 outline-none transition">
+                                <p id="sub-cash-${item.id}" class="text-[9px] text-center font-bold text-primary mt-1.5 ${lineCash > 0 ? '' : 'invisible'}">${formatRupiah(lineCash)}</p>
                             </div>
                             <div class="col-span-3 md:col-span-2">
                                 <input type="number" min="0" value="${cartItem.qris || 0}" oninput="updateCartValue('${item.id}', this.value, 'qris')" 
-                                    class="w-full text-center border rounded-lg p-1.5 text-sm font-bold focus:ring-2 focus:ring-primary outline-none">
-                                <p id="sub-qris-${item.id}" class="text-[9px] text-center font-bold text-primary/70 mt-1 ${lineQris > 0 ? '' : 'hidden'}">${formatRupiah(lineQris)}</p>
+                                    class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-bold focus:ring-2 focus:ring-primary/10 outline-none transition">
+                                <p id="sub-qris-${item.id}" class="text-[9px] text-center font-bold text-teal-600 mt-1.5 ${lineQris > 0 ? '' : 'invisible'}">${formatRupiah(lineQris)}</p>
                             </div>
-                            <div class="hidden md:flex md:col-span-1 justify-end opacity-0 group-hover:opacity-100">
-                                <button onclick="editItem('${item.id}')" class="p-1 text-primary/40 hover:text-primary">
+                            <div class="hidden md:flex md:col-span-1 justify-end opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="editItem('${item.id}')" class="p-2 text-slate-300 hover:text-primary hover:bg-white rounded-lg shadow-sm border border-transparent hover:border-slate-100">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
                             </div>
                         </div>`;
                 });
             });
-            if (!hasAnyResult) html = `<div class="p-10 text-center text-gray-400 italic text-xs">Barang tidak ditemukan...</div>`;
+            if (!hasAnyResult) html = `<div class="p-16 text-center text-slate-300 italic text-xs">Barang tidak ditemukan...</div>`;
             container.innerHTML = html;
         }
 
@@ -491,7 +562,14 @@
             let tCash = 0, tQris = 0;
             
             if (Object.keys(cart).length === 0) {
-                container.innerHTML = `<div class="py-6 text-center opacity-20 text-[10px] font-bold uppercase">Belum ada transaksi</div>`;
+                container.innerHTML = `
+                    <div class="py-10 text-center">
+                        <div class="text-slate-200 mb-2 flex justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                        </div>
+                        <p class="opacity-30 text-[10px] font-black uppercase tracking-widest">Belum Ada Transaksi</p>
+                    </div>
+                `;
                 printBody.innerHTML = '<tr><td colspan="5" class="border p-4 text-center italic text-gray-400">Tidak ada data</td></tr>';
                 updateTotals(0, 0);
                 return;
@@ -506,10 +584,13 @@
                 tCash += (item.cash || 0) * item.harga;
                 tQris += (item.qris || 0) * item.harga;
                 
-                html += `<div class="bg-primary/5 p-2 rounded-lg border border-primary/10 flex justify-between items-center text-[11px]">
+                html += `<div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center text-[11px] group">
                         <div class="flex-1 pr-2">
-                            <p class="font-bold text-primary">${item.nama}</p>
-                            <p class="text-[9px] text-gray-500 font-bold">${item.cash || 0} Tunai | ${item.qris || 0} QRIS</p>
+                            <p class="font-bold text-slate-700">${item.nama}</p>
+                            <div class="flex gap-2 mt-0.5">
+                                <span class="text-[9px] font-bold text-slate-400">${item.cash || 0} Tunai</span>
+                                <span class="text-[9px] font-bold text-teal-500">${item.qris || 0} QRIS</span>
+                            </div>
                         </div>
                         <p class="font-black text-primary">${formatRupiah(sub)}</p>
                     </div>`;
@@ -533,12 +614,14 @@
 
         function saveDailyReport(manual) {
             const date = document.getElementById('headerDate').value;
+            if(!date) return;
             let total = 0;
             Object.values(cart).forEach(i => total += ((i.cash || 0) + (i.qris || 0)) * i.harga);
             const idx = savedReports.findIndex(r => r.date === date);
             const data = { id: idx >= 0 ? savedReports[idx].id : Date.now(), date, total, details: JSON.parse(JSON.stringify(cart)) };
             if (idx >= 0) savedReports[idx] = data; else savedReports.push(data);
             localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
+            
             if (manual) alert('Data laporan berhasil disimpan!');
             const status = document.getElementById('auto-save-status');
             status.style.opacity = '1'; setTimeout(() => status.style.opacity = '0', 2000);
@@ -588,17 +671,22 @@
             const sorted = [...savedReports].sort((a,b) => new Date(b.date) - new Date(a.date));
             
             if(sorted.length === 0) {
-                body.innerHTML = '<tr><td colspan="3" class="p-10 text-center text-gray-400 italic">Belum ada riwayat laporan</td></tr>';
+                body.innerHTML = '<tr><td colspan="3" class="p-16 text-center text-slate-300 italic">Belum ada riwayat laporan harian</td></tr>';
             } else {
                 sorted.forEach(report => {
                     body.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition">
-                            <td class="py-4 px-2 font-bold">${new Date(report.date).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</td>
-                            <td class="py-4 px-2 text-right font-black text-primary">${formatRupiah(report.total)}</td>
-                            <td class="py-4 px-2 text-center">
+                        <tr class="hover:bg-slate-50 transition group">
+                            <td class="py-5 px-6">
+                                <p class="font-bold text-slate-700">${new Date(report.date).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</p>
+                                <p class="text-[10px] text-slate-400 font-medium">Data tersimpan</p>
+                            </td>
+                            <td class="py-5 px-6 text-right font-black text-primary text-base tracking-tighter">${formatRupiah(report.total)}</td>
+                            <td class="py-5 px-6 text-center">
                                 <div class="flex justify-center gap-2">
-                                    <button onclick="loadReport('${report.date}')" class="bg-primary text-secondary px-3 py-1 rounded text-xs font-bold">Buka</button>
-                                    <button onclick="deleteReport(${report.id})" class="bg-rose-500 text-white px-3 py-1 rounded text-xs font-bold">Hapus</button>
+                                    <button onclick="loadReport('${report.date}')" class="bg-primary text-secondary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider hover:brightness-110 transition">Buka</button>
+                                    <button onclick="deleteReport(${report.id})" class="text-rose-400 hover:text-rose-600 p-2 transition">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
                                 </div>
                             </td>
                         </tr>
