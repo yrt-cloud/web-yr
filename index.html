@@ -19,8 +19,10 @@
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&family=Inter:wght@400;700;900&display=swap');
         
+        body { font-family: 'Inter', sans-serif; }
+
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -54,17 +56,21 @@
 
         #digital-clock {
             font-family: 'JetBrains Mono', monospace;
-            text-shadow: 0 0 10px rgba(230, 255, 42, 0.3);
+        }
+
+        /* Border pemisah vertikal antar kolom */
+        .col-separator {
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-10 font-sans text-slate-900" onload="startTime()">
+<body class="bg-slate-50 min-h-screen pb-10 text-slate-900" onload="startTime()">
 
     <!-- Header -->
     <header class="bg-primary text-white p-4 shadow-lg mb-6 no-print sticky top-0 z-40">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
             <div class="flex items-center gap-4">
-                <div class="bg-white p-1 rounded-lg shadow-inner overflow-hidden w-12 h-12 flex items-center justify-center">
+                <div class="bg-white p-1 rounded-lg shadow-inner overflow-hidden w-14 h-14 flex items-center justify-center">
                     <img src="https://api.pax-canvas.com/files/uploaded:pngwing.com%20(1).png" 
                          alt="Logo Kopswa" 
                          class="max-w-full max-h-full object-contain"
@@ -77,35 +83,34 @@
                     </div>
                 </div>
                 <div class="flex flex-col">
-                    <div class="flex items-baseline gap-3">
-                        <h1 class="text-xl font-bold leading-tight uppercase tracking-tight">Toko Kopswa</h1>
-                        <!-- Digital Clock Integrated -->
-                        <div id="digital-clock" class="text-secondary text-lg font-bold tracking-wider">00:00:00</div>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-2xl font-black leading-tight uppercase tracking-tighter">Toko Kopswa</h1>
+                        <div id="digital-clock" class="text-secondary text-2xl font-bold tracking-widest ml-2">00:00:00</div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 mt-1">
                         <input type="date" id="headerDate" onchange="syncWithSavedData()" class="bg-[#08323a] text-secondary border-none rounded px-2 py-0.5 text-xs font-bold outline-none focus:ring-1 focus:ring-secondary">
                     </div>
                 </div>
             </div>
             
-            <div class="flex flex-wrap gap-2 justify-center">
+            <div class="flex flex-wrap gap-2 justify-center items-center">
                 <div class="flex bg-[#08323a] rounded-lg p-1 gap-1 border border-white/10 mr-2">
-                    <button onclick="exportData()" title="Backup Data ke File" class="p-2 hover:bg-primary rounded text-secondary transition">
+                    <button onclick="exportData()" title="Backup Data" class="p-2 hover:bg-primary rounded text-secondary transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                     </button>
-                    <button onclick="document.getElementById('importFile').click()" title="Muat Data dari File" class="p-2 hover:bg-primary rounded text-secondary transition">
+                    <button onclick="document.getElementById('importFile').click()" title="Muat Data" class="p-2 hover:bg-primary rounded text-secondary transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                     </button>
                     <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(event)">
                 </div>
 
-                <button onclick="openModal()" class="bg-[#155e6d] hover:bg-[#1a7486] px-4 py-2 rounded-lg transition text-sm font-semibold flex items-center gap-2 border border-white/10">
+                <button onclick="openModal()" class="bg-[#155e6d] hover:bg-[#1a7486] px-4 py-2.5 rounded-xl transition text-xs font-bold flex items-center gap-2 border border-white/10">
                     <span>+ Barang Baru</span>
                 </button>
-                <button onclick="saveDailyReport(true)" class="bg-emerald-500 hover:bg-emerald-400 px-4 py-2 rounded-lg transition text-sm font-semibold text-white">
+                <button onclick="saveDailyReport(true)" class="bg-emerald-500 hover:bg-emerald-400 px-4 py-2.5 rounded-xl transition text-xs font-bold text-white shadow-lg shadow-emerald-900/20">
                     Simpan Manual
                 </button>
-                <button onclick="window.print()" class="bg-secondary text-primary hover:brightness-110 px-4 py-2 rounded-lg transition text-sm font-bold shadow-sm flex items-center gap-2">
+                <button onclick="window.print()" class="bg-secondary text-primary hover:brightness-110 px-4 py-2.5 rounded-xl transition text-xs font-black shadow-lg shadow-secondary/20 flex items-center gap-2">
                     Print PDF
                 </button>
             </div>
@@ -143,41 +148,40 @@
             <!-- Panel Ringkasan -->
             <div class="lg:col-span-4 lg:order-last">
                 <div class="space-y-4 sticky-sidebar no-print">
-                    <div class="bg-primary p-6 rounded-2xl shadow-xl text-white relative overflow-hidden">
-                        <!-- Decorative background -->
-                        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/5 rounded-full"></div>
+                    <div class="bg-primary p-6 rounded-3xl shadow-2xl text-white relative overflow-hidden">
+                        <div class="absolute -right-4 -top-4 w-32 h-32 bg-white/5 rounded-full"></div>
                         
-                        <div class="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
-                            <h2 class="text-xs font-bold uppercase tracking-widest opacity-80">Ringkasan Pendapatan</h2>
-                            <span id="display-date-label" class="text-[10px] font-bold bg-secondary text-primary px-2 py-1 rounded-full shadow-sm"></span>
+                        <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
+                            <h2 class="text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Ringkasan Pendapatan</h2>
+                            <span id="display-date-label" class="text-[9px] font-black bg-secondary text-primary px-3 py-1 rounded-full shadow-sm"></span>
                         </div>
-                        <div class="space-y-3">
+                        <div class="space-y-4">
                             <div class="flex justify-between items-center">
-                                <span class="text-xs opacity-80">Total Tunai</span>
-                                <span id="subtotal-cash" class="font-bold text-gray-200">Rp 0</span>
+                                <span class="text-xs font-bold opacity-70">Total Tunai</span>
+                                <span id="subtotal-cash" class="font-black text-lg text-white">Rp 0</span>
                             </div>
                             <div class="flex justify-between items-center">
-                                <span class="text-xs opacity-80">Total QRIS</span>
-                                <span id="subtotal-qris" class="font-bold text-gray-200 text-secondary/80">Rp 0</span>
+                                <span class="text-xs font-bold opacity-70">Total QRIS</span>
+                                <span id="subtotal-qris" class="font-black text-lg text-secondary">Rp 0</span>
                             </div>
-                            <div class="pt-4 border-t border-white/10 flex justify-between items-end">
-                                <span class="text-xs font-black uppercase text-secondary">Grand Total</span>
+                            <div class="pt-6 border-t border-white/10 flex flex-col items-end">
+                                <span class="text-[10px] font-black uppercase text-secondary tracking-widest mb-1">Grand Total</span>
                                 <div class="text-right">
-                                    <span id="grand-total" class="text-3xl font-black block text-secondary tracking-tighter">Rp 0</span>
+                                    <span id="grand-total" class="text-4xl font-black block text-secondary tracking-tighter">Rp 0</span>
                                     <span id="auto-save-status" class="text-[9px] text-emerald-400 font-bold uppercase opacity-0 transition-opacity">Auto-saved</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+                    <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
                         <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Detail Penjualan</h3>
-                            <button onclick="resetApp()" class="text-[10px] text-rose-500 font-bold hover:underline">Reset</button>
+                            <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Detail Penjualan</h3>
+                            <button onclick="resetApp()" class="text-[10px] text-rose-500 font-black hover:underline uppercase tracking-tighter">Reset</button>
                         </div>
                         <div id="cart-items" class="scroll-area-cart space-y-2 pr-1"></div>
                         <div class="grid grid-cols-1 mt-5">
-                            <button onclick="showHistory()" class="w-full text-primary font-bold py-3 rounded-xl hover:bg-slate-50 transition text-xs border border-primary/10 flex items-center justify-center gap-2">
+                            <button onclick="showHistory()" class="w-full text-primary font-black py-4 rounded-2xl hover:bg-slate-50 transition text-[10px] uppercase tracking-widest border-2 border-primary/5 flex items-center justify-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 Riwayat Laporan
                             </button>
@@ -188,22 +192,25 @@
 
             <!-- Daftar Barang -->
             <div class="lg:col-span-8 space-y-4 no-print">
-                <div id="category-tabs" class="flex flex-wrap gap-2 mb-2 p-1 bg-gray-200/50 rounded-xl inline-flex"></div>
+                <div id="category-tabs" class="flex flex-wrap gap-2 mb-2 p-1 bg-gray-200/40 rounded-2xl inline-flex"></div>
                 
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="grid grid-cols-12 gap-2 bg-primary p-4 border-b text-[10px] font-black text-white uppercase tracking-widest items-center">
-                        <div class="col-span-5 md:col-span-6 flex items-center gap-4">
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <!-- Header List dengan Pemisah Visual -->
+                    <div class="grid grid-cols-12 gap-0 bg-primary p-4 border-b text-[10px] font-black text-white uppercase tracking-widest items-center">
+                        <div class="col-span-5 md:col-span-6 flex items-center gap-4 pr-4">
                             <span class="whitespace-nowrap">Barang</span>
                             <div class="relative flex-1">
                                 <input type="text" id="searchInput" oninput="handleSearch()" 
-                                    placeholder="Cari..." 
-                                    class="w-full bg-[#08323a] text-white border-none rounded-lg px-3 py-1.5 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-500">
+                                    placeholder="Cari produk..." 
+                                    class="w-full bg-[#08323a] text-white border-none rounded-xl px-4 py-2 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-500">
                             </div>
                         </div>
-                        <div class="col-span-3 md:col-span-3 text-center">Tunai</div>
-                        <div class="col-span-3 md:col-span-2 text-center text-secondary">QRIS</div>
-                        <div class="hidden md:block md:col-span-1 text-right">Edit</div>
+                        <!-- Pemisah Vertikal di Header -->
+                        <div class="col-span-3 md:col-span-3 text-center border-l border-white/10">Tunai</div>
+                        <div class="col-span-3 md:col-span-2 text-center text-secondary border-l border-white/10">QRIS</div>
+                        <div class="hidden md:block md:col-span-1 text-right border-l border-white/10">Edit</div>
                     </div>
+                    
                     <div id="items-container" class="scroll-area-items divide-y divide-slate-50"></div>
                 </div>
             </div>
@@ -302,27 +309,22 @@
     </div>
 
     <script>
-        // Clock Function
+        // Real-time Clock
         function startTime() {
             const today = new Date();
             let h = today.getHours();
             let m = today.getMinutes();
             let s = today.getSeconds();
-            m = checkTime(m);
-            s = checkTime(s);
-            document.getElementById('digital-clock').innerHTML =  h + ":" + m + ":" + s;
+            h = h < 10 ? "0" + h : h;
+            m = m < 10 ? "0" + m : m;
+            s = s < 10 ? "0" + s : s;
+            document.getElementById('digital-clock').innerHTML = h + ":" + m + ":" + s;
             setTimeout(startTime, 1000);
             
-            // Auto init on first load
             if(!window.initialized) {
                 init();
                 window.initialized = true;
             }
-        }
-
-        function checkTime(i) {
-            if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
-            return i;
         }
 
         // Data Master
@@ -355,7 +357,6 @@
         }
 
         function initCharts() {
-            // Chart 1: Bar Horizontal (Top Products)
             const topCtx = document.getElementById('topProductsChart').getContext('2d');
             topProductsChart = new Chart(topCtx, {
                 type: 'bar',
@@ -364,9 +365,7 @@
                     datasets: [{
                         label: 'Qty',
                         data: [],
-                        backgroundColor: [
-                            '#0c4651', '#155e6d', '#1a7486', '#218ba1', '#28a2bc'
-                        ],
+                        backgroundColor: ['#0c4651', '#155e6d', '#1a7486', '#218ba1', '#28a2bc'],
                         borderRadius: 8,
                         barThickness: 20
                     }]
@@ -375,34 +374,15 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#0c4651',
-                            titleFont: { size: 10, weight: 'bold' },
-                            bodyFont: { size: 10 },
-                            padding: 10,
-                            displayColors: false
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        x: { 
-                            beginAtZero: true, 
-                            grid: { display: false },
-                            ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } 
-                        },
-                        y: { 
-                            grid: { display: false },
-                            ticks: { font: { size: 10, weight: 'bold' }, color: '#475569' } 
-                        }
+                        x: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 9 } } },
+                        y: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
                     }
                 }
             });
 
-            // Chart 2: Area Line (Trend)
             const trendCtx = document.getElementById('trendChart').getContext('2d');
-            
-            // Create Gradient
             const gradient = trendCtx.createLinearGradient(0, 0, 0, 200);
             gradient.addColorStop(0, 'rgba(12, 70, 81, 0.2)');
             gradient.addColorStop(1, 'rgba(12, 70, 81, 0)');
@@ -417,10 +397,7 @@
                         borderColor: '#0c4651',
                         borderWidth: 3,
                         pointBackgroundColor: '#e6ff2a',
-                        pointBorderColor: '#0c4651',
-                        pointBorderWidth: 2,
                         pointRadius: 4,
-                        pointHoverRadius: 6,
                         backgroundColor: gradient,
                         fill: true,
                         tension: 0.4
@@ -429,36 +406,10 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: '#0c4651',
-                            padding: 12,
-                            titleFont: { size: 10 },
-                            bodyFont: { size: 11, weight: 'bold' },
-                            callbacks: {
-                                label: function(context) {
-                                    return ' Pendapatan: ' + formatRupiah(context.raw);
-                                }
-                            }
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
-                        y: { 
-                            beginAtZero: true,
-                            grid: { color: '#f1f5f9' },
-                            ticks: { 
-                                font: { size: 9, weight: 'bold' },
-                                color: '#94a3b8',
-                                callback: function(value) { return 'Rp ' + (value/1000) + 'k'; }
-                            }
-                        },
-                        x: { 
-                            grid: { display: false },
-                            ticks: { font: { size: 9, weight: 'bold' }, color: '#94a3b8' } 
-                        }
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
                     }
                 }
             });
@@ -467,30 +418,15 @@
 
         function updateCharts() {
             if (!topProductsChart || !trendChart) return;
-            
-            // Update Top Products
             const productSales = Object.values(cart)
-                .map(item => ({
-                    nama: item.nama,
-                    qty: (parseInt(item.cash) || 0) + (parseInt(item.qris) || 0)
-                }))
-                .filter(p => p.qty > 0)
-                .sort((a, b) => b.qty - a.qty)
-                .slice(0, 5);
-
+                .map(item => ({ nama: item.nama, qty: (parseInt(item.cash) || 0) + (parseInt(item.qris) || 0) }))
+                .filter(p => p.qty > 0).sort((a, b) => b.qty - a.qty).slice(0, 5);
             topProductsChart.data.labels = productSales.map(p => p.nama);
             topProductsChart.data.datasets[0].data = productSales.map(p => p.qty);
             topProductsChart.update();
 
-            // Update Trend (7 Days)
-            const sortedReports = [...savedReports]
-                .sort((a,b) => new Date(a.date) - new Date(b.date))
-                .slice(-7);
-            
-            trendChart.data.labels = sortedReports.map(r => {
-                const d = new Date(r.date);
-                return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-            });
+            const sortedReports = [...savedReports].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
+            trendChart.data.labels = sortedReports.map(r => new Date(r.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
             trendChart.data.datasets[0].data = sortedReports.map(r => r.total);
             trendChart.update();
         }
@@ -518,7 +454,7 @@
             const allCats = ["Semua", ...categories];
             container.innerHTML = allCats.map(cat => `
                 <button onclick="setActiveCategory('${cat}')" 
-                    class="px-5 py-2 rounded-xl transition text-[10px] font-black tracking-widest uppercase ${activeCategory === cat ? 'bg-primary text-secondary shadow-lg shadow-primary/20' : 'text-slate-400 hover:bg-slate-200'}">
+                    class="px-5 py-2.5 rounded-xl transition text-[9px] font-black tracking-widest uppercase ${activeCategory === cat ? 'bg-primary text-secondary shadow-lg' : 'text-slate-400 hover:bg-slate-200'}">
                     ${cat}
                 </button>
             `).join('');
@@ -551,30 +487,37 @@
                     const lineCash = (cartItem.cash || 0) * item.harga;
                     const lineQris = (cartItem.qris || 0) * item.harga;
                     html += `
-                        <div class="grid grid-cols-12 gap-2 p-4 items-center hover:bg-slate-50 group transition">
-                            <div class="col-span-5 md:col-span-6 overflow-hidden">
+                        <div class="grid grid-cols-12 gap-0 p-0 items-stretch hover:bg-slate-50 group transition border-b border-slate-100">
+                            <!-- Kolom Nama Barang -->
+                            <div class="col-span-5 md:col-span-6 p-4 flex flex-col justify-center">
                                 <p class="font-bold text-slate-700 text-sm truncate">${item.nama}</p>
                                 <p class="text-[10px] font-medium text-slate-400">${formatRupiah(item.harga)}</p>
                             </div>
-                            <div class="col-span-3 md:col-span-3">
+                            
+                            <!-- Kolom Tunai (Font Hitam/Abu Tua) -->
+                            <div class="col-span-3 md:col-span-3 p-4 bg-slate-50/30 border-l border-slate-100 flex flex-col items-center justify-center">
                                 <input type="number" min="0" value="${cartItem.cash || 0}" oninput="updateCartValue('${item.id}', this.value, 'cash')" 
-                                    class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-bold focus:ring-2 focus:ring-primary/10 outline-none transition">
-                                <p id="sub-cash-${item.id}" class="text-[9px] text-center font-bold text-primary mt-1.5 ${lineCash > 0 ? '' : 'invisible'}">${formatRupiah(lineCash)}</p>
+                                    class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-black focus:ring-2 focus:ring-primary/10 outline-none transition text-slate-700">
+                                <p id="sub-cash-${item.id}" class="text-[9px] text-center font-black text-slate-500 mt-1.5 ${lineCash > 0 ? '' : 'invisible'}">${formatRupiah(lineCash)}</p>
                             </div>
-                            <div class="col-span-3 md:col-span-2">
+                            
+                            <!-- Kolom QRIS (Font Kuning/Secondary) -->
+                            <div class="col-span-3 md:col-span-2 p-4 bg-primary/5 border-l border-slate-100 flex flex-col items-center justify-center">
                                 <input type="number" min="0" value="${cartItem.qris || 0}" oninput="updateCartValue('${item.id}', this.value, 'qris')" 
-                                    class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-bold focus:ring-2 focus:ring-primary/10 outline-none transition">
-                                <p id="sub-qris-${item.id}" class="text-[9px] text-center font-bold text-teal-600 mt-1.5 ${lineQris > 0 ? '' : 'invisible'}">${formatRupiah(lineQris)}</p>
+                                    class="w-full text-center border-secondary/30 bg-white border-2 rounded-xl p-2 text-sm font-black focus:ring-2 focus:ring-secondary/50 outline-none transition text-primary">
+                                <p id="sub-qris-${item.id}" class="text-[9px] text-center font-black text-primary bg-secondary/20 px-2 rounded mt-1.5 ${lineQris > 0 ? '' : 'invisible'}">${formatRupiah(lineQris)}</p>
                             </div>
-                            <div class="hidden md:flex md:col-span-1 justify-end opacity-0 group-hover:opacity-100 transition">
-                                <button onclick="editItem('${item.id}')" class="p-2 text-slate-300 hover:text-primary hover:bg-white rounded-lg shadow-sm border border-transparent hover:border-slate-100">
+                            
+                            <!-- Kolom Aksi -->
+                            <div class="hidden md:flex md:col-span-1 border-l border-slate-100 items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                                <button onclick="editItem('${item.id}')" class="p-2 text-slate-300 hover:text-primary hover:bg-white rounded-lg">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                 </button>
                             </div>
                         </div>`;
                 });
             });
-            if (!hasAnyResult) html = `<div class="p-16 text-center text-slate-300 italic text-xs">Barang tidak ditemukan...</div>`;
+            if (!hasAnyResult) html = `<div class="p-16 text-center text-slate-300 italic text-xs">Produk tidak ditemukan...</div>`;
             container.innerHTML = html;
         }
 
@@ -596,13 +539,7 @@
             let tCash = 0, tQris = 0;
             
             if (Object.keys(cart).length === 0) {
-                container.innerHTML = `
-                    <div class="py-10 text-center">
-                        <div class="text-slate-200 mb-2 flex justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                        </div>
-                        <p class="opacity-30 text-[10px] font-black uppercase tracking-widest">Keranjang Kosong</p>
-                    </div>`;
+                container.innerHTML = `<div class="py-10 text-center opacity-30 text-[10px] font-black uppercase">Kosong</div>`;
                 printBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center border">Belum ada transaksi</td></tr>';
             } else {
                 let html = '';
@@ -612,24 +549,14 @@
                     const subQris = item.qris * item.harga;
                     tCash += subCash;
                     tQris += subQris;
-                    
-                    html += `
-                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <div>
-                                <p class="text-xs font-bold text-slate-700">${item.nama}</p>
-                                <p class="text-[9px] text-slate-400">${item.cash > 0 ? 'Tunai: '+item.cash : ''} ${item.qris > 0 ? 'QRIS: '+item.qris : ''}</p>
-                            </div>
-                            <p class="text-xs font-black text-primary">${formatRupiah(subCash + subQris)}</p>
-                        </div>`;
-                    
-                    pHtml += `
-                        <tr>
-                            <td class="border border-black p-2">${item.nama}</td>
-                            <td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td>
-                            <td class="border border-black p-2 text-center">${item.cash}</td>
-                            <td class="border border-black p-2 text-center">${item.qris}</td>
-                            <td class="border border-black p-2 text-right">${formatRupiah(subCash + subQris)}</td>
-                        </tr>`;
+                    html += `<div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <p class="text-xs font-bold text-slate-700">${item.nama}</p>
+                                    <p class="text-[9px] text-slate-400">${item.cash > 0 ? 'T:'+item.cash : ''} ${item.qris > 0 ? 'Q:'+item.qris : ''}</p>
+                                </div>
+                                <p class="text-xs font-black text-primary">${formatRupiah(subCash + subQris)}</p>
+                            </div>`;
+                    pHtml += `<tr><td class="border border-black p-2">${item.nama}</td><td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td><td class="border border-black p-2 text-center">${item.cash}</td><td class="border border-black p-2 text-center">${item.qris}</td><td class="border border-black p-2 text-right">${formatRupiah(subCash + subQris)}</td></tr>`;
                 });
                 container.innerHTML = html;
                 printBody.innerHTML = pHtml;
@@ -638,7 +565,6 @@
             document.getElementById('subtotal-cash').innerText = formatRupiah(tCash);
             document.getElementById('subtotal-qris').innerText = formatRupiah(tQris);
             document.getElementById('grand-total').innerText = formatRupiah(tCash + tQris);
-            
             document.getElementById('print-total-cash').innerText = formatRupiah(tCash);
             document.getElementById('print-total-qris').innerText = formatRupiah(tQris);
             document.getElementById('print-grand-total').innerText = formatRupiah(tCash + tQris);
@@ -647,16 +573,10 @@
         function saveDailyReport(isManual) {
             const date = document.getElementById('headerDate').value;
             const total = Object.values(cart).reduce((sum, item) => sum + (item.cash + item.qris) * item.harga, 0);
-            
             const index = savedReports.findIndex(r => r.date === date);
-            if (index > -1) {
-                savedReports[index] = { date, total, details: cart };
-            } else {
-                savedReports.push({ date, total, details: cart });
-            }
-            
+            if (index > -1) savedReports[index] = { date, total, details: cart };
+            else savedReports.push({ date, total, details: cart });
             localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-            
             const status = document.getElementById('auto-save-status');
             status.innerText = isManual ? "Data Tersimpan!" : "Auto-saved";
             status.classList.remove('opacity-0');
@@ -679,9 +599,7 @@
             document.getElementById('modalBarang').classList.add('modal-active');
         }
 
-        function closeModal() {
-            document.getElementById('modalBarang').classList.remove('modal-active');
-        }
+        function closeModal() { document.getElementById('modalBarang').classList.remove('modal-active'); }
 
         function editItem(id) {
             const item = items.find(i => i.id === id);
@@ -697,30 +615,23 @@
             e.preventDefault();
             const id = document.getElementById('editId').value || Date.now().toString();
             const newItem = {
-                id,
-                nama: document.getElementById('inputNama').value,
+                id, nama: document.getElementById('inputNama').value,
                 harga: parseInt(document.getElementById('inputHarga').value),
                 kategori: document.getElementById('inputKategori').value
             };
-
             const index = items.findIndex(i => i.id === id);
-            if (index > -1) items[index] = newItem;
-            else items.push(newItem);
-
+            if (index > -1) items[index] = newItem; else items.push(newItem);
             localStorage.setItem('kantin_master_items', JSON.stringify(items));
-            refreshDisplay();
-            closeModal();
+            refreshDisplay(); closeModal();
         };
 
         function showHistory() {
             const body = document.getElementById('history-table-body');
             body.innerHTML = savedReports.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-4 px-6 font-bold text-slate-600">${new Date(r.date).toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'})}</td>
+                <tr class="hover:bg-slate-50 transition border-b">
+                    <td class="py-4 px-6 font-bold text-slate-600 text-xs">${new Date(r.date).toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'})}</td>
                     <td class="py-4 px-6 text-right font-black text-primary">${formatRupiah(r.total)}</td>
-                    <td class="py-4 px-6 text-center">
-                        <button onclick="loadReport('${r.date}')" class="bg-primary text-secondary px-4 py-1.5 rounded-lg text-[10px] font-black uppercase">Buka</button>
-                    </td>
+                    <td class="py-4 px-6 text-center"><button onclick="loadReport('${r.date}')" class="bg-primary text-secondary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest">Buka</button></td>
                 </tr>
             `).join('');
             document.getElementById('modalHistory').classList.add('modal-active');
@@ -737,9 +648,7 @@
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `backup_kopswa_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
+            a.href = url; a.download = `backup_kopswa_${new Date().toISOString().split('T')[0]}.json`; a.click();
         }
 
         function importData(event) {
@@ -749,19 +658,10 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (data.items) {
-                        items = data.items;
-                        localStorage.setItem('kantin_master_items', JSON.stringify(items));
-                    }
-                    if (data.reports) {
-                        savedReports = data.reports;
-                        localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-                    }
-                    syncWithSavedData();
-                    alert("Data berhasil dimuat!");
-                } catch (err) {
-                    alert("File tidak valid!");
-                }
+                    if (data.items) { items = data.items; localStorage.setItem('kantin_master_items', JSON.stringify(items)); }
+                    if (data.reports) { savedReports = data.reports; localStorage.setItem('kantin_reports', JSON.stringify(savedReports)); }
+                    syncWithSavedData(); alert("Data berhasil dimuat!");
+                } catch (err) { alert("File tidak valid!"); }
             };
             reader.readAsText(file);
         }
@@ -773,9 +673,7 @@
 
         function resetApp() {
             if(confirm("Hapus semua transaksi hari ini?")) {
-                cart = {};
-                saveDailyReport(false);
-                refreshDisplay();
+                cart = {}; saveDailyReport(false); refreshDisplay();
             }
         }
     </script>
