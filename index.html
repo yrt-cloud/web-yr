@@ -19,6 +19,8 @@
         }
     </script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@700&display=swap');
+        
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -49,9 +51,14 @@
                 top: 100px;
             }
         }
+
+        #digital-clock {
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 0 10px rgba(230, 255, 42, 0.3);
+        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-10 font-sans text-slate-900">
+<body class="bg-slate-50 min-h-screen pb-10 font-sans text-slate-900" onload="startTime()">
 
     <!-- Header -->
     <header class="bg-primary text-white p-4 shadow-lg mb-6 no-print sticky top-0 z-40">
@@ -69,8 +76,12 @@
                         </svg>
                     </div>
                 </div>
-                <div>
-                    <h1 class="text-xl font-bold leading-tight uppercase tracking-tight">Toko Kopswa</h1>
+                <div class="flex flex-col">
+                    <div class="flex items-baseline gap-3">
+                        <h1 class="text-xl font-bold leading-tight uppercase tracking-tight">Toko Kopswa</h1>
+                        <!-- Digital Clock Integrated -->
+                        <div id="digital-clock" class="text-secondary text-lg font-bold tracking-wider">00:00:00</div>
+                    </div>
                     <div class="flex items-center gap-2">
                         <input type="date" id="headerDate" onchange="syncWithSavedData()" class="bg-[#08323a] text-secondary border-none rounded px-2 py-0.5 text-xs font-bold outline-none focus:ring-1 focus:ring-secondary">
                     </div>
@@ -291,6 +302,29 @@
     </div>
 
     <script>
+        // Clock Function
+        function startTime() {
+            const today = new Date();
+            let h = today.getHours();
+            let m = today.getMinutes();
+            let s = today.getSeconds();
+            m = checkTime(m);
+            s = checkTime(s);
+            document.getElementById('digital-clock').innerHTML =  h + ":" + m + ":" + s;
+            setTimeout(startTime, 1000);
+            
+            // Auto init on first load
+            if(!window.initialized) {
+                init();
+                window.initialized = true;
+            }
+        }
+
+        function checkTime(i) {
+            if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+            return i;
+        }
+
         // Data Master
         let items = JSON.parse(localStorage.getItem('kantin_master_items')) || [
             { id: '1', nama: 'Sierra Galon', harga: 15500, kategori: 'Minuman' },
@@ -567,96 +601,91 @@
                         <div class="text-slate-200 mb-2 flex justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                         </div>
-                        <p class="opacity-30 text-[10px] font-black uppercase tracking-widest">Belum Ada Transaksi</p>
-                    </div>
-                `;
-                printBody.innerHTML = '<tr><td colspan="5" class="border p-4 text-center italic text-gray-400">Tidak ada data</td></tr>';
-                updateTotals(0, 0);
-                return;
+                        <p class="opacity-30 text-[10px] font-black uppercase tracking-widest">Keranjang Kosong</p>
+                    </div>`;
+                printBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center border">Belum ada transaksi</td></tr>';
+            } else {
+                let html = '';
+                let pHtml = '';
+                Object.values(cart).forEach(item => {
+                    const subCash = item.cash * item.harga;
+                    const subQris = item.qris * item.harga;
+                    tCash += subCash;
+                    tQris += subQris;
+                    
+                    html += `
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div>
+                                <p class="text-xs font-bold text-slate-700">${item.nama}</p>
+                                <p class="text-[9px] text-slate-400">${item.cash > 0 ? 'Tunai: '+item.cash : ''} ${item.qris > 0 ? 'QRIS: '+item.qris : ''}</p>
+                            </div>
+                            <p class="text-xs font-black text-primary">${formatRupiah(subCash + subQris)}</p>
+                        </div>`;
+                    
+                    pHtml += `
+                        <tr>
+                            <td class="border border-black p-2">${item.nama}</td>
+                            <td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td>
+                            <td class="border border-black p-2 text-center">${item.cash}</td>
+                            <td class="border border-black p-2 text-center">${item.qris}</td>
+                            <td class="border border-black p-2 text-right">${formatRupiah(subCash + subQris)}</td>
+                        </tr>`;
+                });
+                container.innerHTML = html;
+                printBody.innerHTML = pHtml;
             }
 
-            const sortedIds = Object.keys(cart).sort((a,b) => cart[a].nama.localeCompare(cart[b].nama));
-            let html = '', phtml = '';
+            document.getElementById('subtotal-cash').innerText = formatRupiah(tCash);
+            document.getElementById('subtotal-qris').innerText = formatRupiah(tQris);
+            document.getElementById('grand-total').innerText = formatRupiah(tCash + tQris);
             
-            sortedIds.forEach(id => {
-                const item = cart[id];
-                const sub = ((item.cash || 0) + (item.qris || 0)) * item.harga;
-                tCash += (item.cash || 0) * item.harga;
-                tQris += (item.qris || 0) * item.harga;
-                
-                html += `<div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex justify-between items-center text-[11px] group">
-                        <div class="flex-1 pr-2">
-                            <p class="font-bold text-slate-700">${item.nama}</p>
-                            <div class="flex gap-2 mt-0.5">
-                                <span class="text-[9px] font-bold text-slate-400">${item.cash || 0} Tunai</span>
-                                <span class="text-[9px] font-bold text-teal-500">${item.qris || 0} QRIS</span>
-                            </div>
-                        </div>
-                        <p class="font-black text-primary">${formatRupiah(sub)}</p>
-                    </div>`;
-                phtml += `<tr class="font-bold"><td class="border border-black p-2">${item.nama.toUpperCase()}</td><td class="border border-black p-2 text-right">${formatRupiah(item.harga)}</td><td class="border border-black p-2 text-center">${item.cash || 0}</td><td class="border border-black p-2 text-center">${item.qris || 0}</td><td class="border border-black p-2 text-right">${formatRupiah(sub)}</td></tr>`;
-            });
-            
-            container.innerHTML = html;
-            printBody.innerHTML = phtml;
-            updateTotals(tCash, tQris);
+            document.getElementById('print-total-cash').innerText = formatRupiah(tCash);
+            document.getElementById('print-total-qris').innerText = formatRupiah(tQris);
+            document.getElementById('print-grand-total').innerText = formatRupiah(tCash + tQris);
         }
 
-        function updateTotals(cash, qris) {
-            const grand = cash + qris;
-            document.getElementById('subtotal-cash').innerText = formatRupiah(cash);
-            document.getElementById('subtotal-qris').innerText = formatRupiah(qris);
-            document.getElementById('grand-total').innerText = formatRupiah(grand);
-            document.getElementById('print-total-cash').innerText = formatRupiah(cash);
-            document.getElementById('print-total-qris').innerText = formatRupiah(qris);
-            document.getElementById('print-grand-total').innerText = formatRupiah(grand);
-        }
-
-        function saveDailyReport(manual) {
+        function saveDailyReport(isManual) {
             const date = document.getElementById('headerDate').value;
-            if(!date) return;
-            let total = 0;
-            Object.values(cart).forEach(i => total += ((i.cash || 0) + (i.qris || 0)) * i.harga);
-            const idx = savedReports.findIndex(r => r.date === date);
-            const data = { id: idx >= 0 ? savedReports[idx].id : Date.now(), date, total, details: JSON.parse(JSON.stringify(cart)) };
-            if (idx >= 0) savedReports[idx] = data; else savedReports.push(data);
+            const total = Object.values(cart).reduce((sum, item) => sum + (item.cash + item.qris) * item.harga, 0);
+            
+            const index = savedReports.findIndex(r => r.date === date);
+            if (index > -1) {
+                savedReports[index] = { date, total, details: cart };
+            } else {
+                savedReports.push({ date, total, details: cart });
+            }
+            
             localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
             
-            if (manual) alert('Data laporan berhasil disimpan!');
             const status = document.getElementById('auto-save-status');
-            status.style.opacity = '1'; setTimeout(() => status.style.opacity = '0', 2000);
+            status.innerText = isManual ? "Data Tersimpan!" : "Auto-saved";
+            status.classList.remove('opacity-0');
+            setTimeout(() => status.classList.add('opacity-0'), 2000);
             updateCharts();
         }
 
         function updateDateDisplay() {
-            const dateVal = document.getElementById('headerDate').value;
-            if(!dateVal) return;
+            const date = new Date(document.getElementById('headerDate').value);
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const formatted = new Date(dateVal).toLocaleDateString('id-ID', options);
+            const formatted = date.toLocaleDateString('id-ID', options);
             document.getElementById('display-date-label').innerText = formatted;
             document.getElementById('print-date-label').innerText = formatted;
         }
 
-        function updateCategoryList(cats) {
-            const list = document.getElementById('categoryList');
-            list.innerHTML = cats.map(c => `<option value="${c}">`).join('');
-        }
-
         function openModal() {
             document.getElementById('modalTitle').innerText = "Tambah Data Barang";
-            document.getElementById('formBarang').reset();
             document.getElementById('editId').value = "";
+            document.getElementById('formBarang').reset();
             document.getElementById('modalBarang').classList.add('modal-active');
         }
 
-        function closeModal() { 
-            document.getElementById('modalBarang').classList.remove('modal-active'); 
+        function closeModal() {
+            document.getElementById('modalBarang').classList.remove('modal-active');
         }
 
         function editItem(id) {
             const item = items.find(i => i.id === id);
-            if (!item) return;
-            document.getElementById('modalTitle').innerText = "Edit Data Barang";
+            document.getElementById('modalTitle').innerText = "Edit Barang";
             document.getElementById('editId').value = item.id;
             document.getElementById('inputNama').value = item.nama;
             document.getElementById('inputHarga').value = item.harga;
@@ -664,35 +693,36 @@
             document.getElementById('modalBarang').classList.add('modal-active');
         }
 
+        document.getElementById('formBarang').onsubmit = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('editId').value || Date.now().toString();
+            const newItem = {
+                id,
+                nama: document.getElementById('inputNama').value,
+                harga: parseInt(document.getElementById('inputHarga').value),
+                kategori: document.getElementById('inputKategori').value
+            };
+
+            const index = items.findIndex(i => i.id === id);
+            if (index > -1) items[index] = newItem;
+            else items.push(newItem);
+
+            localStorage.setItem('kantin_master_items', JSON.stringify(items));
+            refreshDisplay();
+            closeModal();
+        };
+
         function showHistory() {
             const body = document.getElementById('history-table-body');
-            body.innerHTML = '';
-            
-            const sorted = [...savedReports].sort((a,b) => new Date(b.date) - new Date(a.date));
-            
-            if(sorted.length === 0) {
-                body.innerHTML = '<tr><td colspan="3" class="p-16 text-center text-slate-300 italic">Belum ada riwayat laporan harian</td></tr>';
-            } else {
-                sorted.forEach(report => {
-                    body.innerHTML += `
-                        <tr class="hover:bg-slate-50 transition group">
-                            <td class="py-5 px-6">
-                                <p class="font-bold text-slate-700">${new Date(report.date).toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'})}</p>
-                                <p class="text-[10px] text-slate-400 font-medium">Data tersimpan</p>
-                            </td>
-                            <td class="py-5 px-6 text-right font-black text-primary text-base tracking-tighter">${formatRupiah(report.total)}</td>
-                            <td class="py-5 px-6 text-center">
-                                <div class="flex justify-center gap-2">
-                                    <button onclick="loadReport('${report.date}')" class="bg-primary text-secondary px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider hover:brightness-110 transition">Buka</button>
-                                    <button onclick="deleteReport(${report.id})" class="text-rose-400 hover:text-rose-600 p-2 transition">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
-            }
+            body.innerHTML = savedReports.sort((a,b) => new Date(b.date) - new Date(a.date)).map(r => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-4 px-6 font-bold text-slate-600">${new Date(r.date).toLocaleDateString('id-ID', {day:'2-digit', month:'long', year:'numeric'})}</td>
+                    <td class="py-4 px-6 text-right font-black text-primary">${formatRupiah(r.total)}</td>
+                    <td class="py-4 px-6 text-center">
+                        <button onclick="loadReport('${r.date}')" class="bg-primary text-secondary px-4 py-1.5 rounded-lg text-[10px] font-black uppercase">Buka</button>
+                    </td>
+                </tr>
+            `).join('');
             document.getElementById('modalHistory').classList.add('modal-active');
         }
 
@@ -702,30 +732,8 @@
             document.getElementById('modalHistory').classList.remove('modal-active');
         }
 
-        function deleteReport(id) {
-            if(confirm('Hapus laporan ini secara permanen?')) {
-                savedReports = savedReports.filter(r => r.id !== id);
-                localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
-                showHistory();
-                syncWithSavedData();
-            }
-        }
-
-        document.getElementById('formBarang').onsubmit = function(e) {
-            e.preventDefault();
-            const id = document.getElementById('editId').value || Date.now().toString();
-            const nama = document.getElementById('inputNama').value;
-            const harga = parseInt(document.getElementById('inputHarga').value);
-            const kategori = document.getElementById('inputKategori').value;
-            const idx = items.findIndex(i => i.id === id);
-            if (idx >= 0) items[idx] = { id, nama, harga, kategori }; else items.push({ id, nama, harga, kategori });
-            localStorage.setItem('kantin_master_items', JSON.stringify(items));
-            closeModal();
-            refreshDisplay();
-        };
-
         function exportData() {
-            const data = { master: items, reports: savedReports };
+            const data = { items, reports: savedReports };
             const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -741,24 +749,35 @@
             reader.onload = function(e) {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if (data.master) { items = data.master; localStorage.setItem('kantin_master_items', JSON.stringify(items)); }
-                    if (data.reports) { savedReports = data.reports; localStorage.setItem('kantin_reports', JSON.stringify(savedReports)); }
-                    alert('Data berhasil dimuat!');
-                    location.reload();
-                } catch(err) { alert('Format file tidak valid!'); }
+                    if (data.items) {
+                        items = data.items;
+                        localStorage.setItem('kantin_master_items', JSON.stringify(items));
+                    }
+                    if (data.reports) {
+                        savedReports = data.reports;
+                        localStorage.setItem('kantin_reports', JSON.stringify(savedReports));
+                    }
+                    syncWithSavedData();
+                    alert("Data berhasil dimuat!");
+                } catch (err) {
+                    alert("File tidak valid!");
+                }
             };
             reader.readAsText(file);
         }
 
-        function resetApp() {
-            if(confirm('Hapus semua transaksi hari ini?')) {
-                cart = {};
-                refreshDisplay();
-                saveDailyReport(false);
-            }
+        function updateCategoryList(categories) {
+            const list = document.getElementById('categoryList');
+            list.innerHTML = categories.map(c => `<option value="${c}">`).join('');
         }
 
-        window.onload = init;
+        function resetApp() {
+            if(confirm("Hapus semua transaksi hari ini?")) {
+                cart = {};
+                saveDailyReport(false);
+                refreshDisplay();
+            }
+        }
     </script>
 </body>
 </html>
