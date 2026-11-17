@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -6,6 +7,8 @@
     <title>Toko Kopswa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plugin datalabels untuk menampilkan persentase langsung di dalam Rose Chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -57,14 +60,12 @@
         #digital-clock {
             font-family: 'JetBrains Mono', monospace;
         }
-
-        /* Border pemisah vertikal antar kolom */
-        .col-separator {
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-10 text-slate-900" onload="startTime()">
+
+    <!-- Toast Notification (Pengganti alert) -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 no-print"></div>
 
     <!-- Header -->
     <header class="bg-primary text-white p-4 shadow-lg mb-6 no-print sticky top-0 z-40">
@@ -121,23 +122,31 @@
         
         <!-- Panel Statistik -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 no-print">
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-72">
-                <div class="flex justify-between items-center mb-4">
+            <!-- Grafik Rose Chart Produk Terpopuler -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-80 flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-2 shrink-0">
                     <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Produk Terpopuler</h3>
-                    <div class="w-2 h-2 rounded-full bg-orange-400 animate-pulse"></div>
+                    <div class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></div>
                 </div>
-                <div class="relative h-48">
+                <div class="relative flex-1 min-h-0 w-full flex items-center justify-center p-1">
                     <canvas id="topProductsChart"></canvas>
-                </div>
-            </div>
-            <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-72">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performa Penjualan (7 Hari)</h3>
-                    <div class="flex items-center gap-2">
-                        <span class="flex items-center gap-1 text-[9px] font-bold text-primary"><span class="w-2 h-2 rounded-full bg-primary"></span> Pendapatan</span>
+                    <!-- Pesan kosong jika belum ada transaksi -->
+                    <div id="empty-rose-msg" class="absolute inset-0 flex items-center justify-center text-xs text-slate-300 font-bold uppercase tracking-wider pointer-events-none hidden">
+                        Belum ada data
                     </div>
                 </div>
-                <div class="relative h-48">
+            </div>
+
+            <!-- Grafik Tren Penjualan -->
+            <div class="md:col-span-2 bg-white p-5 rounded-2xl shadow-sm border border-gray-100 h-80 flex flex-col overflow-hidden">
+                <div class="flex justify-between items-center mb-3 shrink-0">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Performa Penjualan (7 Hari)</h3>
+                    <div class="flex items-center gap-3">
+                        <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600"><span class="w-3 h-1.5 rounded-sm bg-[#FBBF24]"></span> Cash (Tunai)</span>
+                        <span class="flex items-center gap-1.5 text-[10px] font-bold text-slate-600"><span class="w-3 h-1.5 rounded-sm bg-[#06B6D4]"></span> QRIS</span>
+                    </div>
+                </div>
+                <div class="relative flex-1 min-h-0 w-full">
                     <canvas id="trendChart"></canvas>
                 </div>
             </div>
@@ -177,7 +186,7 @@
                     <div class="bg-white p-5 rounded-3xl shadow-sm border border-gray-100">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-xs font-black text-slate-400 uppercase tracking-widest">Detail Penjualan</h3>
-                            <button onclick="resetApp()" class="text-[10px] text-rose-500 font-black hover:underline uppercase tracking-tighter">Reset</button>
+                            <button onclick="openResetModal()" class="text-[10px] text-rose-500 font-black hover:underline uppercase tracking-tighter">Reset</button>
                         </div>
                         <div id="cart-items" class="scroll-area-cart space-y-2 pr-1"></div>
                         <div class="grid grid-cols-1 mt-5">
@@ -205,7 +214,6 @@
                                     class="w-full bg-[#08323a] text-white border-none rounded-xl px-4 py-2 text-[10px] font-normal focus:ring-1 focus:ring-secondary outline-none placeholder:text-gray-500">
                             </div>
                         </div>
-                        <!-- Pemisah Vertikal di Header -->
                         <div class="col-span-3 md:col-span-3 text-center border-l border-white/10">Tunai</div>
                         <div class="col-span-3 md:col-span-2 text-center text-secondary border-l border-white/10">QRIS</div>
                         <div class="hidden md:block md:col-span-1 text-right border-l border-white/10">Edit</div>
@@ -218,7 +226,7 @@
         </div>
     </main>
 
-    <!-- Modals -->
+    <!-- Modal Tambah/Edit Barang -->
     <div id="modalBarang" class="fixed inset-0 bg-primary/80 backdrop-blur-md hidden items-center justify-center z-50 p-4 no-print">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
             <div class="bg-primary p-5 text-white flex justify-between items-center">
@@ -247,6 +255,21 @@
                     <button type="submit" class="flex-1 py-3 bg-primary text-secondary rounded-2xl font-black shadow-lg shadow-primary/20 hover:brightness-110 transition">SIMPAN</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Modal Konfirmasi Reset (Pengganti confirm) -->
+    <div id="modalReset" class="fixed inset-0 bg-primary/80 backdrop-blur-md hidden items-center justify-center z-50 p-4 no-print">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center mx-auto">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </div>
+            <h3 class="text-lg font-black text-slate-800">Reset Transaksi?</h3>
+            <p class="text-xs text-slate-500">Semua catatan transaksi pada tanggal yang dipilih akan dihapus dan dikembalikan ke 0.</p>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeResetModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-xs hover:bg-slate-200 transition">Batal</button>
+                <button onclick="confirmResetApp()" class="flex-1 py-2.5 bg-rose-500 text-white rounded-xl font-bold text-xs hover:bg-rose-600 transition shadow-lg shadow-rose-500/20">Ya, Hapus</button>
+            </div>
         </div>
     </div>
 
@@ -309,6 +332,28 @@
     </div>
 
     <script>
+        // Mendaftarkan plugin datalabels secara global namun kita aktifkan khusus di Rose Chart
+        Chart.register(ChartDataLabels);
+
+        // Fungsi Toast Notifikasi Modern
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-emerald-600' : 'bg-rose-600';
+            toast.className = `${bgColor} text-white px-4 py-3 rounded-xl shadow-lg text-xs font-bold flex items-center gap-2 transform transition-all duration-300 translate-y-2 opacity-0`;
+            toast.innerHTML = `<span>${message}</span>`;
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
         // Real-time Clock
         function startTime() {
             const today = new Date();
@@ -358,58 +403,175 @@
 
         function initCharts() {
             const topCtx = document.getElementById('topProductsChart').getContext('2d');
+            
+            // Rose Chart / Polar Area Chart
             topProductsChart = new Chart(topCtx, {
-                type: 'bar',
+                type: 'polarArea',
                 data: {
                     labels: [],
                     datasets: [{
-                        label: 'Qty',
+                        label: 'Terjual',
                         data: [],
-                        backgroundColor: ['#2F6B3F', '#346739', '#7FB77E', '#F7C85C', '#FFF6C0'],
-                        borderRadius: 8,
-                        barThickness: 20
+                        // Palet warna pastel-cerah menyerupai Rose Chart pada gambar referensi
+                        backgroundColor: [
+                            'rgba(96, 165, 250, 0.85)',  // Biru Cerah
+                            'rgba(77, 208, 225, 0.85)',  // Cyan / Tosca
+                            'rgba(110, 231, 183, 0.85)', // Hijau Mint
+                            'rgba(167, 243, 208, 0.85)', // Hijau Muda
+                            'rgba(217, 249, 157, 0.85)', // Lime Lembut
+                            'rgba(253, 230, 138, 0.85)'  // Kuning Pastel
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 8
                     }]
                 },
                 options: {
-                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    layout: {
+                        padding: {
+                            top: 4,
+                            bottom: 8,
+                            left: 8,
+                            right: 8
+                        }
+                    },
                     scales: {
-                        x: { beginAtZero: true, grid: { display: false }, ticks: { font: { size: 9 } } },
-                        y: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' } } }
+                        r: {
+                            ticks: { display: false }, // Sembunyikan angka radius agar bersih
+                            grid: { color: 'rgba(0,0,0,0.04)' }, // Garis jaring tipis
+                            angleLines: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            align: 'center',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'rectRounded',
+                                boxWidth: 8,
+                                boxHeight: 6,
+                                padding: 8,
+                                font: { size: 9, weight: 'bold', family: 'Inter' },
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    const dataset = context.dataset.data;
+                                    const total = dataset.reduce((acc, val) => acc + val, 0);
+                                    const val = context.raw;
+                                    const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                    return ` ${context.label}: ${val} pcs (${pct}%)`;
+                                }
+                            }
+                        },
+                        // Menampilkan angka persentase langsung di atas irisan Rose Chart
+                        datalabels: {
+                            color: '#ffffff',
+                            font: {
+                                weight: 'bold',
+                                size: 10,
+                                family: 'Inter'
+                            },
+                            textShadowColor: 'rgba(0, 0, 0, 0.35)',
+                            textShadowBlur: 4,
+                            formatter: (value, ctx) => {
+                                const dataset = ctx.chart.data.datasets[0].data;
+                                const total = dataset.reduce((acc, val) => acc + val, 0);
+                                if (total === 0 || value === 0) return '';
+                                const percentage = Math.round((value / total) * 100);
+                                return percentage >= 5 ? percentage + '%' : ''; // Tampilkan jika >= 5% agar tidak bertumpuk
+                            }
+                        }
                     }
                 }
             });
 
             const trendCtx = document.getElementById('trendChart').getContext('2d');
-            const gradient = trendCtx.createLinearGradient(0, 0, 0, 200);
-            gradient.addColorStop(0, 'rgba(12, 70, 81, 0.2)');
-            gradient.addColorStop(1, 'rgba(12, 70, 81, 0)');
 
+            // Dimension Comparison Line Chart (Perbandingan Cash vs QRIS)
             trendChart = new Chart(trendCtx, {
                 type: 'line',
                 data: {
                     labels: [],
-                    datasets: [{
-                        label: 'Total',
-                        data: [],
-                        borderColor: '#0c4651',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#e6ff2a',
-                        pointRadius: 4,
-                        backgroundColor: gradient,
-                        fill: true,
-                        tension: 0.4
-                    }]
+                    datasets: [
+                        {
+                            label: 'Cash (Tunai)',
+                            data: [],
+                            borderColor: '#FBBF24', // Kuning/Oranye cerah seperti pada gambar
+                            backgroundColor: '#FBBF24',
+                            borderWidth: 2.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            fill: false,
+                            tension: 0 // Garis lurus tajam antar titik
+                        },
+                        {
+                            label: 'QRIS',
+                            data: [],
+                            borderColor: '#06B6D4', // Biru Tosca / Cyan seperti pada gambar
+                            backgroundColor: '#06B6D4',
+                            borderWidth: 2.5,
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            fill: false,
+                            tension: 0 // Garis lurus tajam antar titik
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: { 
+                        legend: { display: false }, // Menggunakan legenda kustom di header kartu
+                        datalabels: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            padding: 10,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    return ` ${context.dataset.label}: ${formatRupiah(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } },
-                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                        y: { 
+                            beginAtZero: true,
+                            border: { display: false },
+                            grid: { 
+                                color: '#e2e8f0',
+                                borderDash: [4, 4] // Garis bantu putus-putus horizontal
+                            }, 
+                            ticks: { 
+                                font: { size: 9, family: 'Inter' },
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return new Intl.NumberFormat('id-ID').format(value);
+                                }
+                            } 
+                        },
+                        x: { 
+                            grid: { display: false }, 
+                            border: { color: '#cbd5e1' },
+                            ticks: { 
+                                font: { size: 9, weight: 'bold', family: 'Inter' },
+                                color: '#64748b'
+                            } 
+                        }
                     }
                 }
             });
@@ -418,16 +580,41 @@
 
         function updateCharts() {
             if (!topProductsChart || !trendChart) return;
+            
+            // Ambil maksimal 6 produk terpopuler untuk Rose Chart
             const productSales = Object.values(cart)
                 .map(item => ({ nama: item.nama, qty: (parseInt(item.cash) || 0) + (parseInt(item.qris) || 0) }))
-                .filter(p => p.qty > 0).sort((a, b) => b.qty - a.qty).slice(0, 5);
+                .filter(p => p.qty > 0)
+                .sort((a, b) => b.qty - a.qty)
+                .slice(0, 6);
+
+            const emptyMsg = document.getElementById('empty-rose-msg');
+            if (productSales.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+            }
+
             topProductsChart.data.labels = productSales.map(p => p.nama);
             topProductsChart.data.datasets[0].data = productSales.map(p => p.qty);
             topProductsChart.update();
 
+            // Ambil data 7 hari terakhir dan pisahkan total Cash (Tunai) & QRIS
             const sortedReports = [...savedReports].sort((a,b) => new Date(a.date) - new Date(b.date)).slice(-7);
             trendChart.data.labels = sortedReports.map(r => new Date(r.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }));
-            trendChart.data.datasets[0].data = sortedReports.map(r => r.total);
+            
+            const cashSeries = sortedReports.map(r => {
+                if (!r.details) return 0;
+                return Object.values(r.details).reduce((sum, item) => sum + ((parseInt(item.cash) || 0) * (parseInt(item.harga) || 0)), 0);
+            });
+
+            const qrisSeries = sortedReports.map(r => {
+                if (!r.details) return 0;
+                return Object.values(r.details).reduce((sum, item) => sum + ((parseInt(item.qris) || 0) * (parseInt(item.harga) || 0)), 0);
+            });
+
+            trendChart.data.datasets[0].data = cashSeries;
+            trendChart.data.datasets[1].data = qrisSeries;
             trendChart.update();
         }
 
@@ -494,14 +681,14 @@
                                 <p class="text-[10px] font-medium text-slate-400">${formatRupiah(item.harga)}</p>
                             </div>
                             
-                            <!-- Kolom Tunai (Font Hitam/Abu Tua) -->
+                            <!-- Kolom Tunai -->
                             <div class="col-span-3 md:col-span-3 p-4 bg-slate-50/30 border-l border-slate-100 flex flex-col items-center justify-center">
                                 <input type="number" min="0" value="${cartItem.cash || 0}" oninput="updateCartValue('${item.id}', this.value, 'cash')" 
                                     class="w-full text-center border-slate-200 bg-white border rounded-xl p-2 text-sm font-black focus:ring-2 focus:ring-primary/10 outline-none transition text-slate-700">
                                 <p id="sub-cash-${item.id}" class="text-[9px] text-center font-black text-slate-500 mt-1.5 ${lineCash > 0 ? '' : 'invisible'}">${formatRupiah(lineCash)}</p>
                             </div>
                             
-                            <!-- Kolom QRIS (Font Kuning/Secondary) -->
+                            <!-- Kolom QRIS -->
                             <div class="col-span-3 md:col-span-2 p-4 bg-primary/5 border-l border-slate-100 flex flex-col items-center justify-center">
                                 <input type="number" min="0" value="${cartItem.qris || 0}" oninput="updateCartValue('${item.id}', this.value, 'qris')" 
                                     class="w-full text-center border-secondary/30 bg-white border-2 rounded-xl p-2 text-sm font-black focus:ring-2 focus:ring-secondary/50 outline-none transition text-primary">
@@ -526,6 +713,16 @@
             const base = items.find(i => i.id === id);
             if (!cart[id]) cart[id] = { id: base.id, nama: base.nama, harga: base.harga, cash: 0, qris: 0 };
             cart[id][type] = qty;
+
+            // Update label subtotal baris secara langsung tanpa re-render seluruh input agar fokus ketik tidak hilang
+            const lineTotal = qty * base.harga;
+            const subEl = document.getElementById(`sub-${type}-${id}`);
+            if (subEl) {
+                subEl.innerText = formatRupiah(lineTotal);
+                if (lineTotal > 0) subEl.classList.remove('invisible');
+                else subEl.classList.add('invisible');
+            }
+
             if (cart[id].cash === 0 && cart[id].qris === 0) delete cart[id];
             renderCart();
             updateCharts();
@@ -580,6 +777,7 @@
             const status = document.getElementById('auto-save-status');
             status.innerText = isManual ? "Data Tersimpan!" : "Auto-saved";
             status.classList.remove('opacity-0');
+            if (isManual) showToast("Laporan harian berhasil disimpan!");
             setTimeout(() => status.classList.add('opacity-0'), 2000);
             updateCharts();
         }
@@ -623,6 +821,7 @@
             if (index > -1) items[index] = newItem; else items.push(newItem);
             localStorage.setItem('kantin_master_items', JSON.stringify(items));
             refreshDisplay(); closeModal();
+            showToast("Data barang berhasil diperbarui!");
         };
 
         function showHistory() {
@@ -649,6 +848,7 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url; a.download = `backup_kopswa_${new Date().toISOString().split('T')[0]}.json`; a.click();
+            showToast("File backup berhasil diunduh!");
         }
 
         function importData(event) {
@@ -660,8 +860,11 @@
                     const data = JSON.parse(e.target.result);
                     if (data.items) { items = data.items; localStorage.setItem('kantin_master_items', JSON.stringify(items)); }
                     if (data.reports) { savedReports = data.reports; localStorage.setItem('kantin_reports', JSON.stringify(savedReports)); }
-                    syncWithSavedData(); alert("Data berhasil dimuat!");
-                } catch (err) { alert("File tidak valid!"); }
+                    syncWithSavedData();
+                    showToast("Data berhasil dimuat dari backup!");
+                } catch (err) { 
+                    showToast("Format file JSON tidak valid!", "error"); 
+                }
             };
             reader.readAsText(file);
         }
@@ -671,10 +874,20 @@
             list.innerHTML = categories.map(c => `<option value="${c}">`).join('');
         }
 
-        function resetApp() {
-            if(confirm("Hapus semua transaksi hari ini?")) {
-                cart = {}; saveDailyReport(false); refreshDisplay();
-            }
+        function openResetModal() {
+            document.getElementById('modalReset').classList.add('modal-active');
+        }
+
+        function closeResetModal() {
+            document.getElementById('modalReset').classList.remove('modal-active');
+        }
+
+        function confirmResetApp() {
+            cart = {}; 
+            saveDailyReport(false); 
+            refreshDisplay();
+            closeResetModal();
+            showToast("Transaksi hari ini telah direset!");
         }
     </script>
 </body>
